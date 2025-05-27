@@ -34,9 +34,28 @@ const Header = () => {
               {t('nav.about')}
             </Link>
             {isAuthenticated && (
-              <Link to="/products" className="text-gray-600 hover:text-green-600 transition-colors">
-                {t('nav.products')}
-              </Link>
+              <>
+                <Link to="/products" className="text-gray-600 hover:text-green-600 transition-colors">
+                  {t('nav.products')}
+                </Link>
+                
+                {user?.type === 'buyer' && (
+                  <Link to="/my-purchases" className="text-gray-600 hover:text-green-600 transition-colors">
+                    Minhas Compras
+                  </Link>
+                )}
+                
+                {user?.type === 'seller' && (
+                  <>
+                    <Link to="/my-products" className="text-gray-600 hover:text-green-600 transition-colors">
+                      Meus Produtos
+                    </Link>
+                    <Link to="/add-product" className="text-gray-600 hover:text-green-600 transition-colors">
+                      Adicionar Produto
+                    </Link>
+                  </>
+                )}
+              </>
             )}
           </nav>
 
@@ -62,11 +81,6 @@ const Header = () => {
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
-                <Link to="/dashboard">
-                  <Button variant="outline" size="sm">
-                    {t('nav.dashboard')}
-                  </Button>
-                </Link>
                 <span className="text-sm text-gray-600">Olá, {user?.name}</span>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   {t('nav.logout')}
