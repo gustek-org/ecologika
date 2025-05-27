@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -67,9 +66,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const users = JSON.parse(localStorage.getItem('ecomarket_users') || '[]');
       const newUser = {
-        ...userData,
         id: Date.now().toString(),
-        isApproved: userData.type === 'buyer' ? true : false
+        name: userData.name || '',
+        email: userData.email || '',
+        type: userData.type || 'buyer' as const,
+        company: userData.company,
+        location: userData.location,
+        documents: userData.documents,
+        isApproved: userData.type === 'buyer' ? true : false,
+        password: userData.password
       };
       
       users.push(newUser);
