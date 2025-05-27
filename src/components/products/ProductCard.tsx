@@ -3,14 +3,19 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Building, User } from 'lucide-react';
+import { MapPin, Building, User, Heart } from 'lucide-react';
 import { Product } from '@/pages/Products';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { saveProduct, unsaveProduct, isProductSaved } = useAuth();
+  const navigate = useNavigate();
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -28,14 +33,37 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return colors[material as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
+  const handleSaveProduct = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isProductSaved(product.id)) {
+      unsaveProduct(product.id);
+    } else {
+      saveProduct(product.id);
+    }
+  };
+
+  const handleViewDetails = () => {
+    navigate(`/product/${product.id}`);
+  };
+
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
-      <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
+      <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden relative">
         <img
           src={product.images[0]}
           alt={product.name}
           className="w-full h-full object-cover"
         />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+          onClick={handleSaveProduct}
+        >
+          <Heart 
+            className={`h-4 w-4 ${isProductSaved(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+          />
+        </Button>
       </div>
       
       <CardContent className="flex-1 p-4">
@@ -81,7 +109,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </CardContent>
       
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full bg-green-600 hover:bg-green-700">
+        <Button 
+          className="w-full bg-green-600 hover:bg-green-700"
+          onClick={handleViewDetails}
+        >
           Ver Detalhes
         </Button>
       </CardFooter>

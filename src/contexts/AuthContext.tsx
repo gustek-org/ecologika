@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -9,6 +10,7 @@ interface User {
   location?: string;
   documents?: string[];
   isApproved?: boolean;
+  savedProducts?: string[];
 }
 
 interface AuthContextType {
@@ -17,6 +19,9 @@ interface AuthContextType {
   logout: () => void;
   register: (userData: Partial<User> & { password: string }) => Promise<boolean>;
   isAuthenticated: boolean;
+  saveProduct: (productId: string) => void;
+  unsaveProduct: (productId: string) => void;
+  isProductSaved: (productId: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +46,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
     }
   }, []);
+
+  const saveProduct = (productId: string) => {
+    if (user) {
+      const savedProducts = user.savedProducts || [];
+      if (!savedProducts.includes(productId)) {
+        const updatedUser = {
+          ...user,
+          savedProducts: [...savedProducts, productId]
+        };
+        setUser(updatedUser);
+        localStorage.setItem('ecomarket_user', JSON.stringify(updatedUser));
+      }
+    }
+  };
+
+  const unsaveProduct = (productId: string) => {
+    if (user) {
+      const savedProducts = user.savedProducts || [];
+      const updatedUser = {
+        ...user,
+        savedProducts: savedProducts.filter(id => id !== productId)
+      };
+      setUser(updatedUser);
+      localStorage.setItem('ecomarket_user', JSON.stringify(updatedUser));
+    }
+  };
+
+  const isProductSaved = (productId: string) => {
+    return user?.savedProducts?.includes(productId) || false;
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -74,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         location: userData.location,
         documents: userData.documents,
         isApproved: userData.type === 'buyer' ? true : false,
+        savedProducts: [],
         password: userData.password
       };
       
@@ -103,7 +139,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       logout,
       register,
-      isAuthenticated
+      isAuthenticated,
+      saveProduct,
+      unsaveProduct,
+      isProductSaved
     }}>
       {children}
     </AuthContext.Provider>
