@@ -125,13 +125,9 @@ const ProductDetails = () => {
       navigate('/login');
       return;
     }
-    navigate('/checkout', { 
-      state: { 
-        product, 
-        quantity: selectedQuantity,
-        totalPrice: product.price * selectedQuantity
-      } 
-    });
+    
+    // Navigate to checkout with product and quantity as URL parameters
+    navigate(`/checkout?product=${product.id}&quantity=${selectedQuantity}`);
   };
 
   const totalPrice = product.price * selectedQuantity;
