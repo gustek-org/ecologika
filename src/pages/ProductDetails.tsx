@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,82 +10,62 @@ import { MapPin, Building, User, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-
-// Mock data - in a real app this would come from an API
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Papel Reciclado',
-    material: 'Papel',
-    type: 'Escritório',
-    quantity: 1000,
-    unit: 'kg',
-    price: 150,
-    location: 'São Paulo, SP',
-    seller: 'João Silva',
-    sellerCompany: 'EcoPaper Ltda',
-    description: 'Papel reciclado de alta qualidade, ideal para impressão e embalagens. Produzido com processos sustentáveis e certificado para uso comercial.',
-    images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Plástico PET',
-    material: 'Plástico',
-    type: 'PET',
-    quantity: 500,
-    unit: 'kg',
-    price: 300,
-    location: 'Rio de Janeiro, RJ',
-    seller: 'Maria Santos',
-    sellerCompany: 'PlasticoVerde',
-    description: 'Garrafas PET prensadas, prontas para reciclagem industrial.',
-    images: ['/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-18'
-  },
-  {
-    id: '3',
-    name: 'Alumínio Limpo',
-    material: 'Metal',
-    type: 'Alumínio',
-    quantity: 200,
-    unit: 'kg',
-    price: 800,
-    location: 'Belo Horizonte, MG',
-    seller: 'Carlos Oliveira',
-    sellerCompany: 'MetalRecicla',
-    description: 'Latas de alumínio limpas e prensadas, excelente qualidade.',
-    images: ['/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-20'
-  },
-  {
-    id: '4',
-    name: 'Vidro Transparente',
-    material: 'Vidro',
-    type: 'Transparente',
-    quantity: 300,
-    unit: 'kg',
-    price: 100,
-    location: 'Curitiba, PR',
-    seller: 'Ana Costa',
-    sellerCompany: 'VidroEco',
-    description: 'Vidro transparente separado e limpo, sem contaminações.',
-    images: ['/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-22'
-  }
-];
+import { Product } from '@/pages/Products';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { saveProduct, unsaveProduct, isProductSaved, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const product = mockProducts.find(p => p.id === id);
+  useEffect(() => {
+    if (id) {
+      fetchProduct(id);
+    }
+  }, [id]);
+
+  const fetchProduct = async (productId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setProduct(data);
+    } catch (error) {
+      console.error('Erro ao buscar produto:', error);
+      toast({
+        title: "Erro",
+        description: "Produto não encontrado.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Carregando produto...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -166,24 +146,11 @@ const ProductDetails = () => {
           <div className="space-y-4">
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={product.images[0]}
+                src={product.image_url}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            {product.images.length > 1 && (
-              <div className="grid grid-cols-3 gap-2">
-                {product.images.slice(1).map((image, index) => (
-                  <div key={index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img
-                      src={image}
-                      alt={`${product.name} ${index + 2}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Informações do produto */}
@@ -219,11 +186,11 @@ const ProductDetails = () => {
               <CardContent className="space-y-3">
                 <div className="flex items-center">
                   <Building className="h-4 w-4 mr-3 text-gray-500" />
-                  <span>{product.sellerCompany}</span>
+                  <span>{product.seller_company}</span>
                 </div>
                 <div className="flex items-center">
                   <User className="h-4 w-4 mr-3 text-gray-500" />
-                  <span>{product.seller}</span>
+                  <span>{product.seller_name}</span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-3 text-gray-500" />

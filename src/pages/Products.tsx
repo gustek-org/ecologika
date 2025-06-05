@@ -8,7 +8,8 @@ import ProductCard from '@/components/products/ProductCard';
 import ProductFilters from '@/components/products/ProductFilters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Heart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,15 +28,17 @@ export interface Product {
   co2_savings: string;
   is_active: boolean;
   created_at: string;
+  seller_id: string;
 }
 
 const Products = () => {
   const { t } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showFavorites, setShowFavorites] = useState(false);
   const [filters, setFilters] = useState({
     material: '',
     location: '',
@@ -122,6 +125,25 @@ const Products = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-4">Produtos Disponíveis</h1>
           
+          {/* Botões de visualização */}
+          <div className="flex gap-4 mb-6">
+            <Button
+              variant={!showFavorites ? "default" : "outline"}
+              onClick={() => setShowFavorites(false)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Todos os Produtos
+            </Button>
+            <Button
+              variant={showFavorites ? "default" : "outline"}
+              onClick={() => setShowFavorites(true)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              <Heart className="h-4 w-4 mr-2" />
+              Favoritos
+            </Button>
+          </div>
+          
           {/* Barra de busca */}
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -143,14 +165,9 @@ const Products = () => {
           {filteredProducts.map((product) => (
             <ProductCard 
               key={product.id} 
-              product={{
-                ...product,
-                seller: product.seller_name,
-                sellerCompany: product.seller_company,
-                images: [product.image_url],
-                type: '',
-                isApproved: true
-              }} 
+              product={product}
+              showFavorites={showFavorites}
+              currentUserId={user?.id}
             />
           ))}
         </div>
@@ -158,8 +175,15 @@ const Products = () => {
         {filteredProducts.length === 0 && !isLoading && (
           <Card className="text-center py-12">
             <CardContent>
-              <h3 className="text-xl font-semibold mb-2">Nenhum produto encontrado</h3>
-              <p className="text-gray-600">Tente ajustar os filtros ou termo de busca.</p>
+              <h3 className="text-xl font-semibold mb-2">
+                {showFavorites ? 'Nenhum produto favoritado' : 'Nenhum produto encontrado'}
+              </h3>
+              <p className="text-gray-600">
+                {showFavorites 
+                  ? 'Você ainda não favoritou nenhum produto.'
+                  : 'Tente ajustar os filtros ou termo de busca.'
+                }
+              </p>
             </CardContent>
           </Card>
         )}

@@ -3,62 +3,38 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { MapPin, Plus, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  material: string;
-  quantity: number;
-  unit: string;
-  price: number;
-  location: string;
-  seller_id: string;
-  seller_name: string;
-  seller_company: string;
-  image_url: string;
-  co2_savings: string;
-  created_at: string;
-  is_active: boolean;
-}
+import { useToast } from '@/hooks/use-toast';
+import { Product } from '@/pages/Products';
 
 const MyProducts = () => {
   const { user, profile, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated or not a seller
   if (!isAuthenticated || !user) {
     navigate('/login');
     return null;
   }
 
-  // Redirect if not a seller
   if (profile?.type !== 'seller') {
     navigate('/');
     return null;
   }
 
   useEffect(() => {
-    fetchProducts();
+    fetchMyProducts();
   }, [user?.id]);
 
-  const fetchProducts = async () => {
+  const fetchMyProducts = async () => {
     if (!user?.id) return;
 
     try {
@@ -74,7 +50,7 @@ const MyProducts = () => {
 
       setProducts(data || []);
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
+      console.error('Erro ao buscar meus produtos:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar seus produtos.",
@@ -102,69 +78,35 @@ const MyProducts = () => {
     return colors[material as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingProduct) return;
-
+  const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('products')
-        .update({
-          name: editingProduct.name,
-          description: editingProduct.description,
-          quantity: editingProduct.quantity,
-          price: editingProduct.price
-        })
-        .eq('id', editingProduct.id);
-
-      if (error) {
-        throw error;
-      }
-
-      setIsEditDialogOpen(false);
-      setEditingProduct(null);
-      await fetchProducts();
-      
-      toast({
-        title: "Produto atualizado!",
-        description: "As alterações foram salvas com sucesso.",
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar produto:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o produto.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDelete = async (productId: string) => {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
+        .update({ is_active: !currentStatus })
         .eq('id', productId);
 
       if (error) {
         throw error;
       }
 
-      await fetchProducts();
-      
+      // Atualizar o estado local
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === productId
+            ? { ...product, is_active: !currentStatus }
+            : product
+        )
+      );
+
       toast({
-        title: "Produto removido!",
-        description: "O produto foi excluído com sucesso.",
+        title: "Produto atualizado",
+        description: `Produto ${!currentStatus ? 'ativado' : 'desativado'} com sucesso.`,
       });
     } catch (error) {
-      console.error('Erro ao deletar produto:', error);
+      console.error('Erro ao alterar status do produto:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível excluir o produto.",
+        description: "Não foi possível alterar o status do produto.",
         variant: "destructive",
       });
     }
@@ -175,7 +117,7 @@ const MyProducts = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Carregando...</div>
+          <div className="text-center">Carregando seus produtos...</div>
         </div>
         <Footer />
       </div>
@@ -187,11 +129,8 @@ const MyProducts = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Meus Produtos</h1>
-            <p className="text-gray-600">Gerencie seus produtos em venda</p>
-          </div>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Meus Produtos</h1>
           <Button 
             onClick={() => navigate('/add-product')}
             className="bg-green-600 hover:bg-green-700"
@@ -201,54 +140,12 @@ const MyProducts = () => {
           </Button>
         </div>
 
-        {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Package className="h-8 w-8 text-green-600 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600">Total de Produtos</p>
-                  <p className="text-2xl font-bold">{products.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div>
-                <p className="text-sm text-gray-600">Valor Total em Estoque</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatPrice(products.reduce((total, p) => total + (p.price * p.quantity), 0))}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div>
-                <p className="text-sm text-gray-600">Itens em Estoque</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {products.reduce((total, p) => total + p.quantity, 0)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Lista de produtos */}
         {products.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                Nenhum produto cadastrado
-              </h3>
-              <p className="text-gray-500 mb-6">
-                Comece adicionando seu primeiro produto sustentável para venda.
-              </p>
+          <Card className="text-center py-12">
+            <CardContent>
+              <Package className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Nenhum produto cadastrado</h3>
+              <p className="text-gray-600 mb-6">Comece adicionando seu primeiro produto sustentável.</p>
               <Button 
                 onClick={() => navigate('/add-product')}
                 className="bg-green-600 hover:bg-green-700"
@@ -259,123 +156,74 @@ const MyProducts = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Produtos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Material</TableHead>
-                    <TableHead>Quantidade</TableHead>
-                    <TableHead>Preço Unit.</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <img 
-                            src={product.image_url} 
-                            alt={product.name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="text-sm text-gray-500">{product.location}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getMaterialColor(product.material)}>
-                          {product.material}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{product.quantity} {product.unit}</TableCell>
-                      <TableCell>{formatPrice(product.price)}</TableCell>
-                      <TableCell className="font-semibold text-green-600">
-                        {formatPrice(product.price * product.quantity)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(product)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(product.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <Card key={product.id} className="h-full flex flex-col">
+                <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex gap-2">
+                      <Badge className={getMaterialColor(product.material)}>
+                        {product.material}
+                      </Badge>
+                      <Badge variant={product.is_active ? "default" : "secondary"}>
+                        {product.is_active ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
+                </CardHeader>
+                
+                <CardContent className="flex-1 pt-0">
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                  
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span>{product.location}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <span className="text-lg font-bold text-green-600">
+                        {formatPrice(product.price)}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-1">
+                        / {product.quantity} {product.unit}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleProductStatus(product.id, product.is_active)}
+                      className="flex-1"
+                    >
+                      {product.is_active ? 'Desativar' : 'Ativar'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      Editar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
-
-        {/* Dialog de edição */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Editar Produto</DialogTitle>
-            </DialogHeader>
-            {editingProduct && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Nome</label>
-                  <Input
-                    value={editingProduct.name}
-                    onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Descrição</label>
-                  <Textarea
-                    value={editingProduct.description}
-                    onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-sm font-medium">Quantidade</label>
-                    <Input
-                      type="number"
-                      value={editingProduct.quantity}
-                      onChange={(e) => setEditingProduct({...editingProduct, quantity: Number(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Preço</label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingProduct.price}
-                      onChange={(e) => setEditingProduct({...editingProduct, price: Number(e.target.value)})}
-                    />
-                  </div>
-                </div>
-                <Button onClick={handleSaveEdit} className="w-full">
-                  Salvar Alterações
-                </Button>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
 
       <Footer />

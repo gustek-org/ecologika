@@ -10,11 +10,18 @@ import { useNavigate } from 'react-router-dom';
 
 interface ProductCardProps {
   product: Product;
+  showFavorites?: boolean;
+  currentUserId?: string;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = false, currentUserId }) => {
   const { saveProduct, unsaveProduct, isProductSaved } = useAuth();
   const navigate = useNavigate();
+
+  // Se está mostrando favoritos, só mostra produtos favoritados
+  if (showFavorites && !isProductSaved(product.id)) {
+    return null;
+  }
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -46,11 +53,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     navigate(`/product/${product.id}`);
   };
 
+  const isOwnProduct = currentUserId === product.seller_id;
+
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
       <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden relative">
         <img
-          src={product.images[0]}
+          src={product.image_url}
           alt={product.name}
           className="w-full h-full object-cover"
         />
@@ -85,12 +94,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           
           <div className="flex items-center">
             <Building className="h-4 w-4 mr-1" />
-            <span>{product.sellerCompany}</span>
+            <span>{product.seller_company}</span>
           </div>
           
           <div className="flex items-center">
             <User className="h-4 w-4 mr-1" />
-            <span>{product.seller}</span>
+            <span>{product.seller_name}</span>
           </div>
         </div>
         
@@ -109,12 +118,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </CardContent>
       
       <CardFooter className="p-4 pt-0">
-        <Button 
-          className="w-full bg-green-600 hover:bg-green-700"
-          onClick={handleViewDetails}
-        >
-          Ver Detalhes
-        </Button>
+        {isOwnProduct ? (
+          <Button 
+            className="w-full bg-gray-400 cursor-not-allowed"
+            disabled
+          >
+            Seu Produto
+          </Button>
+        ) : (
+          <Button 
+            className="w-full bg-green-600 hover:bg-green-700"
+            onClick={handleViewDetails}
+          >
+            Ver Detalhes
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

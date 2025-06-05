@@ -35,7 +35,7 @@ const AddProduct = () => {
     material: '',
     quantity: 1,
     unit: 'kg',
-    price: 0,
+    price: '',
     location: profile?.location || '',
     images: [] as string[],
     co2_savings: '',
@@ -43,10 +43,47 @@ const AddProduct = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const formatPriceInput = (value: string) => {
+    // Remove tudo que não for número
+    const numericValue = value.replace(/\D/g, '');
+    
+    // Converte para número e divide por 100 para ter centavos
+    const floatValue = parseFloat(numericValue) / 100;
+    
+    // Formata como moeda brasileira
+    if (isNaN(floatValue) || floatValue === 0) {
+      return '';
+    }
+    
+    return floatValue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  };
+
+  const parsePriceValue = (formattedPrice: string): number => {
+    if (!formattedPrice) return 0;
+    
+    // Remove símbolos de moeda e espaços, substitui vírgula por ponto
+    const numericString = formattedPrice
+      .replace(/[R$\s]/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
+    
+    return parseFloat(numericString) || 0;
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedPrice = formatPriceInput(e.target.value);
+    setFormData(prev => ({ ...prev, price: formattedPrice }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.description || !formData.material || formData.price <= 0) {
+    const priceValue = parsePriceValue(formData.price);
+    
+    if (!formData.name || !formData.description || !formData.material || priceValue <= 0) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -66,7 +103,7 @@ const AddProduct = () => {
           material: formData.material,
           quantity: formData.quantity,
           unit: formData.unit,
-          price: formData.price,
+          price: priceValue,
           location: formData.location,
           image_url: formData.images.length > 0 ? formData.images[0] : '/placeholder.svg',
           co2_savings: formData.co2_savings,
@@ -224,11 +261,10 @@ const AddProduct = () => {
                       Preço (R$) *
                     </label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      type="text"
                       value={formData.price}
-                      onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                      onChange={handlePriceChange}
+                      placeholder="R$ 0,00"
                       required
                     />
                   </div>
@@ -239,6 +275,7 @@ const AddProduct = () => {
                     Economia de CO₂ (opcional)
                   </label>
                   <Input
+                    type="text"
                     value={formData.co2_savings}
                     onChange={(e) => setFormData(prev => ({ ...prev, co2_savings: e.target.value }))}
                     placeholder="Ex: 5kg de CO₂ economizados"
