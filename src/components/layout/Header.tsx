@@ -18,16 +18,17 @@ const Header = () => {
 
   if (isLoading) {
     return (
-      <header className="bg-white shadow-md border-b border-green-100">
+      <header className="bg-white shadow-lg border-b border-ecologika-light backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E</span>
-              </div>
-              <span className="text-xl font-bold text-gray-800">Ecologika</span>
+            <Link to="/" className="flex items-center space-x-3 group">
+              <img 
+                src="/lovable-uploads/75c38a0d-fba9-485d-914e-54b13cd3c77e.png" 
+                alt="Ecologika" 
+                className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
+              />
             </Link>
-            <div className="animate-pulse">Carregando...</div>
+            <div className="animate-pulse text-ecologika-primary">Carregando...</div>
           </div>
         </div>
       </header>
@@ -35,23 +36,30 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-white shadow-md border-b border-green-100">
+    <header className="bg-white shadow-lg border-b border-ecologika-light backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="text-xl font-bold text-gray-800">Ecologika</span>
+          <Link to="/" className="flex items-center space-x-3 group animate-fade-in">
+            <img 
+              src="/lovable-uploads/75c38a0d-fba9-485d-914e-54b13cd3c77e.png" 
+              alt="Ecologika" 
+              className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
+            />
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-8">
             {!user && (
               <>
-                <Link to="/" className="text-gray-600 hover:text-green-600 transition-colors">
+                <Link 
+                  to="/" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                >
                   {t('nav.home')}
                 </Link>
-                <Link to="/about" className="text-gray-600 hover:text-green-600 transition-colors">
+                <Link 
+                  to="/about" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                >
                   {t('nav.about')}
                 </Link>
               </>
@@ -59,28 +67,43 @@ const Header = () => {
             
             {user && (
               <>
-                <Link to="/products" className="text-gray-600 hover:text-green-600 transition-colors">
+                <Link 
+                  to="/products" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                >
                   {t('nav.products')}
                 </Link>
                 
                 {profile?.type === 'buyer' && (
                   <>
-                    <Link to="/my-purchases" className="text-gray-600 hover:text-green-600 transition-colors">
+                    <Link 
+                      to="/my-purchases" 
+                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                    >
                       Minhas Compras
                     </Link>
-                    <Link to="/products?favorites=true" className="text-gray-600 hover:text-green-600 transition-colors flex items-center">
-                      <Heart className="h-4 w-4 mr-1" />
-                      Favoritos
+                    <Link 
+                      to="/products?favorites=true" 
+                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium flex items-center space-x-1 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                    >
+                      <Heart className="h-4 w-4 transition-transform duration-300 hover:scale-110" />
+                      <span>Favoritos</span>
                     </Link>
                   </>
                 )}
                 
                 {profile?.type === 'seller' && (
                   <>
-                    <Link to="/my-products" className="text-gray-600 hover:text-green-600 transition-colors">
+                    <Link 
+                      to="/my-products" 
+                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                    >
                       Meus Produtos
                     </Link>
-                    <Link to="/add-product" className="text-gray-600 hover:text-green-600 transition-colors">
+                    <Link 
+                      to="/add-product" 
+                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                    >
                       Adicionar Produto
                     </Link>
                   </>
@@ -90,19 +113,23 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 bg-ecologika-light rounded-lg p-1">
               <button
                 onClick={() => setLanguage('pt')}
-                className={`px-2 py-1 text-sm rounded transition-colors ${
-                  language === 'pt' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:text-green-600'
+                className={`px-3 py-1 text-sm rounded-md transition-all duration-300 ${
+                  language === 'pt' 
+                    ? 'bg-ecologika-primary text-white shadow-md' 
+                    : 'text-ecologika-primary hover:bg-white hover:shadow-sm'
                 }`}
               >
                 PT
               </button>
               <button
                 onClick={() => setLanguage('en')}
-                className={`px-2 py-1 text-sm rounded transition-colors ${
-                  language === 'en' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:text-green-600'
+                className={`px-3 py-1 text-sm rounded-md transition-all duration-300 ${
+                  language === 'en' 
+                    ? 'bg-ecologika-primary text-white shadow-md' 
+                    : 'text-ecologika-primary hover:bg-white hover:shadow-sm'
                 }`}
               >
                 EN
@@ -110,24 +137,39 @@ const Header = () => {
             </div>
 
             {user ? (
-              <div className="flex items-center space-x-3">
-                <Link to="/profile" className="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors">
-                  <User size={16} />
-                  <span className="text-sm">{profile?.name || user.email}</span>
+              <div className="flex items-center space-x-3 animate-slide-in">
+                <Link 
+                  to="/profile" 
+                  className="flex items-center space-x-2 text-gray-700 hover:text-ecologika-primary transition-all duration-300 bg-gray-50 hover:bg-ecologika-light px-3 py-2 rounded-lg"
+                >
+                  <User size={16} className="transition-transform duration-300 hover:scale-110" />
+                  <span className="text-sm font-medium">{profile?.name || user.email}</span>
                 </Link>
-                <Button variant="outline" size="sm" onClick={handleLogout}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="border-ecologika-primary text-ecologika-primary hover:bg-ecologika-primary hover:text-white transition-all duration-300"
+                >
                   {t('nav.logout')}
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 animate-slide-in">
                 <Link to="/login">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="border-ecologika-primary text-ecologika-primary hover:bg-ecologika-primary hover:text-white transition-all duration-300"
+                  >
                     {t('nav.login')}
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                  <Button 
+                    size="sm" 
+                    className="bg-ecologika-primary hover:bg-ecologika-primary/90 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                  >
                     {t('nav.register')}
                   </Button>
                 </Link>
