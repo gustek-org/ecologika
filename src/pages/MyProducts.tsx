@@ -32,14 +32,21 @@ interface Product {
 }
 
 const MyProducts = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  if (!isAuthenticated || user?.type !== 'seller') {
+  // Redirect if not authenticated
+  if (!isAuthenticated || !user) {
     navigate('/login');
+    return null;
+  }
+
+  // Redirect if not a seller
+  if (profile?.type !== 'seller') {
+    navigate('/');
     return null;
   }
 

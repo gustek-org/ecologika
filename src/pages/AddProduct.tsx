@@ -1,77 +1,94 @@
-
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Upload, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useToast } from '@/hooks/use-toast';
 
-interface ProductFormData {
-  name: string;
-  description: string;
-  material: string;
-  quantity: number;
-  unit: string;
-  price: number;
-  location: string;
-  imageUrl: string;
-}
-
 const AddProduct = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const form = useForm<ProductFormData>({
-    defaultValues: {
-      name: '',
-      description: '',
-      material: '',
-      quantity: 1,
-      unit: 'unidade',
-      price: 0,
-      location: user?.location || '',
-      imageUrl: ''
-    }
-  });
 
-  if (!isAuthenticated || user?.type !== 'seller') {
+  // Redirect if not authenticated or not a seller
+  if (!isAuthenticated || !user) {
     navigate('/login');
     return null;
   }
 
-  const onSubmit = (data: ProductFormData) => {
-    console.log('Adding product:', data);
+  if (profile?.type !== 'seller') {
+    navigate('/');
+    return null;
+  }
+
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    material: '',
+    quantity: 1,
+    unit: 'kg',
+    price: 0,
+    location: profile?.location || '',
+    images: [] as string[],
+    co2Savings: '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    const products = JSON.parse(localStorage.getItem('ecomarket_products') || '[]');
-    const newProduct = {
+    if (!formData.name || !formData.description || !formData.material || formData.price <= 0) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const product = {
       id: Date.now().toString(),
-      ...data,
-      seller: user.name,
-      sellerCompany: user.company || 'Empresa',
+      ...formData,
       sellerId: user.id,
-      images: [data.imageUrl || '/placeholder.svg'],
-      co2Savings: (Math.random() * 5 + 1).toFixed(1),
-      createdAt: new Date().toISOString()
+      seller: profile?.name || user.email || '',
+      sellerCompany: profile?.company || '',
+      images: formData.images.length > 0 ? formData.images : ['/placeholder.svg'],
+      createdAt: new Date().toISOString(),
     };
-    
-    products.push(newProduct);
-    localStorage.setItem('ecomarket_products', JSON.stringify(products));
-    
+
+    // Save to localStorage for now
+    const existingProducts = JSON.parse(localStorage.getItem('ecomarket_products') || '[]');
+    localStorage.setItem('ecomarket_products', JSON.stringify([...existingProducts, product]));
+
     toast({
-      title: "Produto adicionado com sucesso!",
-      description: "Seu produto foi cadastrado e está disponível para venda.",
+      title: "Produto adicionado!",
+      description: "Seu produto foi cadastrado com sucesso.",
     });
-    
+
     navigate('/my-products');
+  };
+
+  const addImage = () => {
+    const url = prompt('Digite a URL da imagem:');
+    if (url) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, url]
+      }));
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   return (
@@ -79,188 +96,185 @@ const AddProduct = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/my-products')}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar aos meus produtos
-        </Button>
-
         <div className="max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6">Adicionar Produto</h1>
+          
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl text-center">Adicionar Novo Produto</CardTitle>
+              <CardTitle>Informações do Produto</CardTitle>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    rules={{ required: "Nome é obrigatório" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome do Produto</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Papel reciclado A4" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nome do Produto *
+                  </label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ex: Papel reciclado A4"
+                    required
                   />
+                </div>
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    rules={{ required: "Descrição é obrigatória" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descrição</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Descreva seu produto, origem dos materiais, processos sustentáveis..."
-                            className="min-h-[100px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descrição *
+                  </label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Descreva seu produto sustentável..."
+                    rows={4}
+                    required
                   />
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="material"
-                      rules={{ required: "Material é obrigatório" }}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Material</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o material" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Papel">Papel</SelectItem>
-                              <SelectItem value="Plástico">Plástico</SelectItem>
-                              <SelectItem value="Metal">Metal</SelectItem>
-                              <SelectItem value="Vidro">Vidro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Material *
+                    </label>
+                    <Select onValueChange={(value) => setFormData(prev => ({ ...prev, material: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o material" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Papel">Papel</SelectItem>
+                        <SelectItem value="Plástico">Plástico</SelectItem>
+                        <SelectItem value="Metal">Metal</SelectItem>
+                        <SelectItem value="Vidro">Vidro</SelectItem>
+                        <SelectItem value="Tecido">Tecido</SelectItem>
+                        <SelectItem value="Eletrônicos">Eletrônicos</SelectItem>
+                        <SelectItem value="Outros">Outros</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Localização
+                    </label>
+                    <Input
+                      value={formData.location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="Cidade, Estado"
                     />
+                  </div>
+                </div>
 
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      rules={{ required: "Localização é obrigatória" }}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Localização</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Cidade, Estado" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantidade *
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData(prev => ({ ...prev, quantity: Number(e.target.value) }))}
+                      required
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="quantity"
-                      rules={{ required: "Quantidade é obrigatória", min: { value: 1, message: "Mínimo 1" } }}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quantidade</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              min="1"
-                              {...field} 
-                              onChange={e => field.onChange(Number(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="unit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Unidade</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="unidade">Unidade</SelectItem>
-                              <SelectItem value="kg">Kg</SelectItem>
-                              <SelectItem value="litro">Litro</SelectItem>
-                              <SelectItem value="metro">Metro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      rules={{ required: "Preço é obrigatório", min: { value: 0.01, message: "Preço deve ser maior que 0" } }}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Preço (R$)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              step="0.01"
-                              min="0.01"
-                              {...field} 
-                              onChange={e => field.onChange(Number(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unidade
+                    </label>
+                    <Select onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={formData.unit} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="toneladas">toneladas</SelectItem>
+                        <SelectItem value="unidades">unidades</SelectItem>
+                        <SelectItem value="m²">m²</SelectItem>
+                        <SelectItem value="litros">litros</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="imageUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL da Imagem (opcional)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="https://exemplo.com/imagem.jpg"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Preço (R$) *
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                      required
+                    />
+                  </div>
+                </div>
 
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Economia de CO₂ (opcional)
+                  </label>
+                  <Input
+                    value={formData.co2Savings}
+                    onChange={(e) => setFormData(prev => ({ ...prev, co2Savings: e.target.value }))}
+                    placeholder="Ex: 5kg de CO₂ economizados"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Imagens do Produto
+                  </label>
+                  <div className="space-y-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addImage}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Imagem (URL)
+                    </Button>
+                    
+                    {formData.images.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {formData.images.map((url, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={url}
+                              alt={`Produto ${index + 1}`}
+                              className="w-full h-24 object-cover rounded border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 h-6 w-6 p-0"
+                              onClick={() => removeImage(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/my-products')}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
                     Adicionar Produto
                   </Button>
-                </form>
-              </Form>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>
