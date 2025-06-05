@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { User } from 'lucide-react';
 
 const Header = () => {
   const { user, profile, logout, isLoading } = useAuth();
@@ -99,7 +100,10 @@ const Header = () => {
 
             {user ? (
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-600">Olá, {profile?.name || user.email}</span>
+                <Link to="/profile" className="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors">
+                  <User size={16} />
+                  <span className="text-sm">{profile?.name || user.email}</span>
+                </Link>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   {t('nav.logout')}
                 </Button>

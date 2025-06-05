@@ -25,6 +25,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   isLoading: boolean;
+  isAuthenticated: boolean;
   saveProduct: (productId: string) => void;
   unsaveProduct: (productId: string) => void;
   isProductSaved: (productId: string) => boolean;
@@ -47,6 +48,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  const isAuthenticated = !!user && !!session;
+
   // Fetch user profile from the profiles table
   const fetchProfile = async (userId: string) => {
     try {
@@ -61,7 +64,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      setProfile(data);
+      // Ensure type is properly cast
+      const profileData: UserProfile = {
+        ...data,
+        type: data.type as 'buyer' | 'seller'
+      };
+
+      setProfile(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -202,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout,
       resetPassword,
       isLoading,
+      isAuthenticated,
       saveProduct,
       unsaveProduct,
       isProductSaved
