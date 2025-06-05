@@ -11,9 +11,11 @@ import { MapPin, Building, User, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import ProductImageGallery from '@/components/products/ProductImageGallery';
 import { Product } from '@/pages/Products';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useProductImages } from '@/hooks/useProductImages';
 
 const ProductDetailsSkeleton = () => (
   <div className="min-h-screen bg-gray-50">
@@ -102,13 +104,16 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const { saveProduct, unsaveProduct, isProductSaved, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const { fetchProductImages } = useProductImages();
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [images, setImages] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
       fetchProduct(id);
+      loadImages(id);
     }
   }, [id]);
 
@@ -128,7 +133,7 @@ const ProductDetails = () => {
       // Convert database format to Product interface
       const formattedProduct = {
         ...data,
-        co2_savings: data.co2_savings?.toString() || '', // Convert number to string
+        co2_savings: data.co2_savings?.toString() || '',
         quantity: data.quantity || 1,
         unit: data.unit || 'kg',
         seller_name: data.seller_name || '',
@@ -145,6 +150,19 @@ const ProductDetails = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadImages = async (productId: string) => {
+    try {
+      const productImages = await fetchProductImages(productId);
+      setImages(productImages.map(img => ({
+        id: img.id || '',
+        image_url: img.image_url,
+        image_order: img.image_order
+      })));
+    } catch (error) {
+      console.error('Erro ao carregar imagens:', error);
     }
   };
 
@@ -225,13 +243,10 @@ const ProductDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Imagens do produto */}
           <div className="space-y-4">
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <ProductImageGallery 
+              images={images}
+              productName={product.name}
+            />
           </div>
 
           {/* Informações do produto */}

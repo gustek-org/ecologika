@@ -13,6 +13,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useProductImages } from '@/hooks/useProductImages';
 
 interface Product {
   id: string;
@@ -114,6 +115,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { user, profile, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const { fetchProductImages } = useProductImages();
   
   const productId = searchParams.get('product');
   const requestedQuantity = Number(searchParams.get('quantity')) || 1;
@@ -121,6 +123,7 @@ const Checkout = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(requestedQuantity);
   const [isLoading, setIsLoading] = useState(true);
+  const [productImage, setProductImage] = useState<string>('');
   const [shippingInfo, setShippingInfo] = useState({
     address: '',
     city: '',
@@ -158,10 +161,19 @@ const Checkout = () => {
       }
 
       if (data) {
-        setProduct({
+        const formattedProduct = {
           ...data,
           co2_savings: data.co2_savings?.toString() || '',
-        });
+        };
+        setProduct(formattedProduct);
+        
+        // Load product images
+        const images = await fetchProductImages(data.id);
+        if (images.length > 0) {
+          setProductImage(images[0].image_url);
+        } else {
+          setProductImage(data.image_url || '');
+        }
       } else {
         navigate('/products');
       }
@@ -331,7 +343,7 @@ const Checkout = () => {
                 <CardContent>
                   <div className="flex space-x-4">
                     <img 
-                      src={product.image_url || '/placeholder.svg'} 
+                      src={productImage || '/placeholder.svg'} 
                       alt={product.name}
                       className="w-20 h-20 object-cover rounded"
                     />

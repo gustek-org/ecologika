@@ -15,7 +15,7 @@ interface ProductCardProps {
   currentUserId?: string;
 }
 
-interface ProductImage {
+interface ProductImageType {
   id: string;
   image_url: string;
   image_order: number;
@@ -25,7 +25,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = fals
   const { saveProduct, unsaveProduct, isProductSaved } = useAuth();
   const { fetchProductImages } = useProductImages();
   const navigate = useNavigate();
-  const [images, setImages] = useState<ProductImage[]>([]);
+  const [images, setImages] = useState<ProductImageType[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
 
   // Se está mostrando favoritos, só mostra produtos favoritados
@@ -37,7 +37,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = fals
     const loadImages = async () => {
       setIsLoadingImages(true);
       const productImages = await fetchProductImages(product.id);
-      setImages(productImages);
+      // Convert to the expected type
+      const formattedImages = productImages.map(img => ({
+        id: img.id || '',
+        image_url: img.image_url,
+        image_order: img.image_order
+      }));
+      setImages(formattedImages);
       setIsLoadingImages(false);
     };
 
