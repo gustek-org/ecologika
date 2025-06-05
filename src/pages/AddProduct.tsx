@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,12 +11,23 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ImageUpload from '@/components/products/ImageUpload';
+import { useProductImages } from '@/hooks/useProductImages';
+
+interface ProductImage {
+  id?: string;
+  image_url: string;
+  image_order: number;
+  file?: File;
+}
 
 const AddProduct = () => {
   const { user, profile, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { saveProductImages } = useProductImages();
   const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState<ProductImage[]>([]);
 
   // Redirect if not authenticated or not a seller
   if (!isAuthenticated || !user) {
@@ -39,7 +49,6 @@ const AddProduct = () => {
     quantity: '',
     unit: 'kg',
     location: '',
-    image_url: '',
     co2_savings: ''
   });
 
@@ -88,8 +97,8 @@ const AddProduct = () => {
         quantity: parseInt(formData.quantity) || 1,
         unit: formData.unit,
         location: formData.location,
-        image_url: formData.image_url,
-        co2_savings: co2SavingsValue, // Now storing as number or null
+        image_url: images.length > 0 ? images[0].image_url : null, // Use first image as main image
+        co2_savings: co2SavingsValue,
         seller_id: user.id,
         seller_name: profile?.name || '',
         seller_company: profile?.company || '',
@@ -108,7 +117,16 @@ const AddProduct = () => {
         throw error;
       }
 
-      console.log('Product created:', data);
+      const newProduct = data[0];
+      console.log('Product created:', newProduct);
+
+      // Save product images if any
+      if (images.length > 0) {
+        const imagesSaved = await saveProductImages(newProduct.id, images);
+        if (!imagesSaved) {
+          console.warn('Some images could not be saved');
+        }
+      }
 
       toast({
         title: "Produto adicionado!",
@@ -133,12 +151,22 @@ const AddProduct = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto">
+        <Card className="max-w-4xl mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">Adicionar Novo Produto</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Image Upload Section */}
+              <div>
+                <ImageUpload
+                  images={images}
+                  onImagesChange={setImages}
+                  maxImages={5}
+                  disabled={isLoading}
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Nome do Produto *</Label>
@@ -245,17 +273,6 @@ const AddProduct = () => {
               </div>
 
               <div>
-                <Label htmlFor="image_url">URL da Imagem</Label>
-                <Input
-                  id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                  placeholder="https://exemplo.com/imagem.jpg"
-                />
-              </div>
-
-              <div>
                 <Label htmlFor="co2_savings">Economia de CO₂ (opcional)</Label>
                 <Input
                   id="co2_savings"
@@ -268,7 +285,7 @@ const AddProduct = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? 'Adicionando...' : 'Adicionar Produto'}
