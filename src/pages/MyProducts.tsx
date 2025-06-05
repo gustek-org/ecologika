@@ -10,12 +10,19 @@ import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/pages/Products';
+import { useProductImages } from '@/hooks/useProductImages';
+
+interface ProductWithImages extends Product {
+  firstImage?: string;
+  totalImages?: number;
+}
 
 const MyProducts = () => {
   const { user, profile, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
+  const { fetchProductImages } = useProductImages();
+  const [products, setProducts] = useState<ProductWithImages[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Redirect if not authenticated or not a seller
@@ -47,15 +54,25 @@ const MyProducts = () => {
         throw error;
       }
 
-      // Convert database format to Product interface
-      const formattedProducts = data?.map(product => ({
-        ...product,
-        co2_savings: product.co2_savings?.toString() || '', // Convert number to string
-        quantity: product.quantity || 1,
-        unit: product.unit || 'kg',
-        seller_name: product.seller_name || '',
-        seller_company: product.seller_company || '',
-      })) || [];
+      // Convert database format to Product interface and load images
+      const formattedProducts = await Promise.all(
+        data?.map(async (product) => {
+          // Load images for each product
+          const images = await fetchProductImages(product.id);
+          const firstImage = images.length > 0 ? images[0].image_url : product.image_url;
+          
+          return {
+            ...product,
+            co2_savings: product.co2_savings?.toString() || '',
+            quantity: product.quantity || 1,
+            unit: product.unit || 'kg',
+            seller_name: product.seller_name || '',
+            seller_company: product.seller_company || '',
+            firstImage,
+            totalImages: images.length,
+          };
+        }) || []
+      );
 
       setProducts(formattedProducts);
     } catch (error) {
@@ -168,19 +185,35 @@ const MyProducts = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
               <Card key={product.id} className="h-full flex flex-col">
-                <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden relative">
+                  {product.firstImage ? (
+                    <img
+                      src={product.firstImage}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                      <div className="text-center text-gray-500">
+                        <div className="text-2xl mb-1">📷</div>
+                        <p className="text-xs">Sem imagem</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Show image count if multiple images */}
+                  {product.totalImages && product.totalImages > 1 && (
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                      +{product.totalImages} fotos
+                    </div>
+                  )}
                 </div>
                 
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex gap-2">
                       <Badge className={getMaterialColor(product.material)}>
-                        {product.image_url}
+                        {product.material}
                       </Badge>
                       <Badge variant={product.is_active ? "default" : "secondary"}>
                         {product.is_active ? "Ativo" : "Inativo"}
