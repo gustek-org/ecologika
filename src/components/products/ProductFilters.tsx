@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Filter, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductFiltersProps {
   filters: {
@@ -16,8 +17,40 @@ interface ProductFiltersProps {
 }
 
 const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChange }) => {
-  const materials = ['Papel', 'Plástico', 'Metal', 'Vidro'];
-  const locations = ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Curitiba'];
+  const [materials, setMaterials] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
+
+  const fetchFilterOptions = async () => {
+    try {
+      // Buscar materiais únicos
+      const { data: materialData } = await supabase
+        .from('products')
+        .select('material')
+        .eq('is_active', true);
+
+      // Buscar localizações únicas
+      const { data: locationData } = await supabase
+        .from('products')
+        .select('location')
+        .eq('is_active', true);
+
+      if (materialData) {
+        const uniqueMaterials = [...new Set(materialData.map(item => item.material).filter(Boolean))];
+        setMaterials(uniqueMaterials);
+      }
+
+      if (locationData) {
+        const uniqueLocations = [...new Set(locationData.map(item => item.location).filter(Boolean))];
+        setLocations(uniqueLocations);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar opções de filtro:', error);
+    }
+  };
 
   const updateFilter = (key: string, value: any) => {
     onFiltersChange({

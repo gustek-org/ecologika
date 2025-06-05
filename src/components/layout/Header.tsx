@@ -46,12 +46,17 @@ const Header = () => {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-600 hover:text-green-600 transition-colors">
-              {t('nav.home')}
-            </Link>
-            <Link to="/about" className="text-gray-600 hover:text-green-600 transition-colors">
-              {t('nav.about')}
-            </Link>
+            {!user && (
+              <>
+                <Link to="/" className="text-gray-600 hover:text-green-600 transition-colors">
+                  {t('nav.home')}
+                </Link>
+                <Link to="/about" className="text-gray-600 hover:text-green-600 transition-colors">
+                  {t('nav.about')}
+                </Link>
+              </>
+            )}
+            
             {user && (
               <>
                 <Link to="/products" className="text-gray-600 hover:text-green-600 transition-colors">

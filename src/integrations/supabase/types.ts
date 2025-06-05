@@ -19,10 +19,15 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           location: string | null
+          material: string | null
           name: string
           price: number
+          quantity: number | null
+          seller_company: string | null
           seller_id: string
+          seller_name: string | null
           sustainability_rating: number | null
+          unit: string | null
           updated_at: string | null
         }
         Insert: {
@@ -34,10 +39,15 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           location?: string | null
+          material?: string | null
           name: string
           price: number
+          quantity?: number | null
+          seller_company?: string | null
           seller_id: string
+          seller_name?: string | null
           sustainability_rating?: number | null
+          unit?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -49,10 +59,15 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           location?: string | null
+          material?: string | null
           name?: string
           price?: number
+          quantity?: number | null
+          seller_company?: string | null
           seller_id?: string
+          seller_name?: string | null
           sustainability_rating?: number | null
+          unit?: string | null
           updated_at?: string | null
         }
         Relationships: []

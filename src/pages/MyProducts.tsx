@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Package } from 'lucide-react';
@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Product {
   id: string;
@@ -23,20 +24,23 @@ interface Product {
   unit: string;
   price: number;
   location: string;
-  sellerId: string;
-  seller: string;
-  sellerCompany: string;
-  images: string[];
-  co2Savings: string;
-  createdAt: string;
+  seller_id: string;
+  seller_name: string;
+  seller_company: string;
+  image_url: string;
+  co2_savings: string;
+  created_at: string;
+  is_active: boolean;
 }
 
 const MyProducts = () => {
   const { user, profile, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Redirect if not authenticated
   if (!isAuthenticated || !user) {
@@ -50,9 +54,36 @@ const MyProducts = () => {
     return null;
   }
 
-  const products = JSON.parse(localStorage.getItem('ecomarket_products') || '[]')
-    .filter((product: Product) => product.sellerId === user?.id)
-    .sort((a: Product, b: Product) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  useEffect(() => {
+    fetchProducts();
+  }, [user?.id]);
+
+  const fetchProducts = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('seller_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar seus produtos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -76,34 +107,80 @@ const MyProducts = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingProduct) return;
 
-    const allProducts = JSON.parse(localStorage.getItem('ecomarket_products') || '[]');
-    const updatedProducts = allProducts.map((p: Product) => 
-      p.id === editingProduct.id ? editingProduct : p
-    );
-    
-    localStorage.setItem('ecomarket_products', JSON.stringify(updatedProducts));
-    setIsEditDialogOpen(false);
-    setEditingProduct(null);
-    
-    toast({
-      title: "Produto atualizado!",
-      description: "As alterações foram salvas com sucesso.",
-    });
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: editingProduct.name,
+          description: editingProduct.description,
+          quantity: editingProduct.quantity,
+          price: editingProduct.price
+        })
+        .eq('id', editingProduct.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setIsEditDialogOpen(false);
+      setEditingProduct(null);
+      await fetchProducts();
+      
+      toast({
+        title: "Produto atualizado!",
+        description: "As alterações foram salvas com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o produto.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (productId: string) => {
-    const allProducts = JSON.parse(localStorage.getItem('ecomarket_products') || '[]');
-    const updatedProducts = allProducts.filter((p: Product) => p.id !== productId);
-    localStorage.setItem('ecomarket_products', JSON.stringify(updatedProducts));
-    
-    toast({
-      title: "Produto removido!",
-      description: "O produto foi excluído com sucesso.",
-    });
+  const handleDelete = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        throw error;
+      }
+
+      await fetchProducts();
+      
+      toast({
+        title: "Produto removido!",
+        description: "O produto foi excluído com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao deletar produto:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o produto.",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Carregando...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -143,7 +220,7 @@ const MyProducts = () => {
               <div>
                 <p className="text-sm text-gray-600">Valor Total em Estoque</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {formatPrice(products.reduce((total: number, p: Product) => total + (p.price * p.quantity), 0))}
+                  {formatPrice(products.reduce((total, p) => total + (p.price * p.quantity), 0))}
                 </p>
               </div>
             </CardContent>
@@ -154,7 +231,7 @@ const MyProducts = () => {
               <div>
                 <p className="text-sm text-gray-600">Itens em Estoque</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {products.reduce((total: number, p: Product) => total + p.quantity, 0)}
+                  {products.reduce((total, p) => total + p.quantity, 0)}
                 </p>
               </div>
             </CardContent>
@@ -199,12 +276,12 @@ const MyProducts = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.map((product: Product) => (
+                  {products.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <img 
-                            src={product.images[0]} 
+                            src={product.image_url} 
                             alt={product.name}
                             className="w-12 h-12 object-cover rounded"
                           />

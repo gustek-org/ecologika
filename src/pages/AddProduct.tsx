@@ -1,16 +1,17 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const AddProduct = () => {
   const { user, profile, isAuthenticated } = useAuth();
@@ -37,10 +38,12 @@ const AddProduct = () => {
     price: 0,
     location: profile?.location || '',
     images: [] as string[],
-    co2Savings: '',
+    co2_savings: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.description || !formData.material || formData.price <= 0) {
@@ -52,26 +55,47 @@ const AddProduct = () => {
       return;
     }
 
-    const product = {
-      id: Date.now().toString(),
-      ...formData,
-      sellerId: user.id,
-      seller: profile?.name || user.email || '',
-      sellerCompany: profile?.company || '',
-      images: formData.images.length > 0 ? formData.images : ['/placeholder.svg'],
-      createdAt: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
 
-    // Save to localStorage for now
-    const existingProducts = JSON.parse(localStorage.getItem('ecomarket_products') || '[]');
-    localStorage.setItem('ecomarket_products', JSON.stringify([...existingProducts, product]));
+    try {
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          name: formData.name,
+          description: formData.description,
+          material: formData.material,
+          quantity: formData.quantity,
+          unit: formData.unit,
+          price: formData.price,
+          location: formData.location,
+          image_url: formData.images.length > 0 ? formData.images[0] : '/placeholder.svg',
+          co2_savings: formData.co2_savings,
+          seller_id: user.id,
+          seller_name: profile?.name || user.email || '',
+          seller_company: profile?.company || '',
+          is_active: true
+        });
 
-    toast({
-      title: "Produto adicionado!",
-      description: "Seu produto foi cadastrado com sucesso.",
-    });
+      if (error) {
+        throw error;
+      }
 
-    navigate('/my-products');
+      toast({
+        title: "Produto adicionado!",
+        description: "Seu produto foi cadastrado com sucesso.",
+      });
+
+      navigate('/my-products');
+    } catch (error) {
+      console.error('Erro ao cadastrar produto:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível cadastrar o produto. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const addImage = () => {
@@ -215,8 +239,8 @@ const AddProduct = () => {
                     Economia de CO₂ (opcional)
                   </label>
                   <Input
-                    value={formData.co2Savings}
-                    onChange={(e) => setFormData(prev => ({ ...prev, co2Savings: e.target.value }))}
+                    value={formData.co2_savings}
+                    onChange={(e) => setFormData(prev => ({ ...prev, co2_savings: e.target.value }))}
                     placeholder="Ex: 5kg de CO₂ economizados"
                   />
                 </div>
@@ -267,11 +291,16 @@ const AddProduct = () => {
                     variant="outline"
                     onClick={() => navigate('/my-products')}
                     className="flex-1"
+                    disabled={isSubmitting}
                   >
                     Cancelar
                   </Button>
-                  <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
-                    Adicionar Produto
+                  <Button 
+                    type="submit" 
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Cadastrando...' : 'Adicionar Produto'}
                   </Button>
                 </div>
               </form>

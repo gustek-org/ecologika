@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
@@ -9,104 +9,70 @@ import ProductFilters from '@/components/products/ProductFilters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Product {
   id: string;
   name: string;
   material: string;
-  type: string;
   quantity: number;
   unit: string;
   price: number;
   location: string;
-  seller: string;
-  sellerCompany: string;
+  seller_name: string;
+  seller_company: string;
   description: string;
-  images: string[];
-  isApproved: boolean;
-  createdAt: string;
+  image_url: string;
+  co2_savings: string;
+  is_active: boolean;
+  created_at: string;
 }
-
-// Mock data para demonstração
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Papel Reciclado',
-    material: 'Papel',
-    type: 'Escritório',
-    quantity: 1000,
-    unit: 'kg',
-    price: 150,
-    location: 'São Paulo, SP',
-    seller: 'João Silva',
-    sellerCompany: 'EcoPaper Ltda',
-    description: 'Papel reciclado de alta qualidade, ideal para impressão e embalagens.',
-    images: ['/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Plástico PET',
-    material: 'Plástico',
-    type: 'PET',
-    quantity: 500,
-    unit: 'kg',
-    price: 300,
-    location: 'Rio de Janeiro, RJ',
-    seller: 'Maria Santos',
-    sellerCompany: 'PlasticoVerde',
-    description: 'Garrafas PET prensadas, prontas para reciclagem industrial.',
-    images: ['/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-18'
-  },
-  {
-    id: '3',
-    name: 'Alumínio Limpo',
-    material: 'Metal',
-    type: 'Alumínio',
-    quantity: 200,
-    unit: 'kg',
-    price: 800,
-    location: 'Belo Horizonte, MG',
-    seller: 'Carlos Oliveira',
-    sellerCompany: 'MetalRecicla',
-    description: 'Latas de alumínio limpas e prensadas, excelente qualidade.',
-    images: ['/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-20'
-  },
-  {
-    id: '4',
-    name: 'Vidro Transparente',
-    material: 'Vidro',
-    type: 'Transparente',
-    quantity: 300,
-    unit: 'kg',
-    price: 100,
-    location: 'Curitiba, PR',
-    seller: 'Ana Costa',
-    sellerCompany: 'VidroEco',
-    description: 'Vidro transparente separado e limpo, sem contaminações.',
-    images: ['/placeholder.svg'],
-    isApproved: true,
-    createdAt: '2024-01-22'
-  }
-];
 
 const Products = () => {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
     material: '',
     location: '',
     priceRange: [0, 1000] as [number, number]
   });
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os produtos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter(product => {
+    return products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           product.material.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           product.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -117,7 +83,7 @@ const Products = () => {
 
       return matchesSearch && matchesMaterial && matchesLocation && matchesPrice;
     });
-  }, [searchTerm, filters]);
+  }, [products, searchTerm, filters]);
 
   if (!isAuthenticated) {
     return (
@@ -130,6 +96,18 @@ const Products = () => {
               <p className="text-gray-600">Você precisa estar logado para ver os produtos.</p>
             </CardContent>
           </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Carregando produtos...</div>
         </div>
         <Footer />
       </div>
@@ -163,11 +141,21 @@ const Products = () => {
         {/* Lista de produtos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={{
+                ...product,
+                seller: product.seller_name,
+                sellerCompany: product.seller_company,
+                images: [product.image_url],
+                type: '',
+                isApproved: true
+              }} 
+            />
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
+        {filteredProducts.length === 0 && !isLoading && (
           <Card className="text-center py-12">
             <CardContent>
               <h3 className="text-xl font-semibold mb-2">Nenhum produto encontrado</h3>
