@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,12 @@ import { Product } from '@/pages/Products';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useProductImages } from '@/hooks/useProductImages';
+
+interface ProductImage {
+  id: string;
+  image_url: string;
+  image_order: number;
+}
 
 const ProductDetailsSkeleton = () => (
   <div className="min-h-screen bg-gray-50">
@@ -108,7 +113,7 @@ const ProductDetails = () => {
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [images, setImages] = useState<any[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -156,11 +161,15 @@ const ProductDetails = () => {
   const loadImages = async (productId: string) => {
     try {
       const productImages = await fetchProductImages(productId);
-      setImages(productImages.map(img => ({
-        id: img.id || '',
-        image_url: img.image_url,
-        image_order: img.image_order
-      })));
+      // Convert to the expected type and ensure we have valid images
+      const formattedImages = productImages
+        .filter(img => img.image_url && !img.image_url.startsWith('blob:'))
+        .map(img => ({
+          id: img.id || '',
+          image_url: img.image_url,
+          image_order: img.image_order
+        }));
+      setImages(formattedImages);
     } catch (error) {
       console.error('Erro ao carregar imagens:', error);
     }
@@ -245,7 +254,7 @@ const ProductDetails = () => {
           <div className="space-y-4">
             <ProductImageGallery 
               images={images}
-              productName={product.name}
+              productName={product?.name || ''}
             />
           </div>
 

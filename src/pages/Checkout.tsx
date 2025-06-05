@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -167,12 +166,19 @@ const Checkout = () => {
         };
         setProduct(formattedProduct);
         
-        // Load product images
+        // Load product images and use the first valid one
         const images = await fetchProductImages(data.id);
-        if (images.length > 0) {
-          setProductImage(images[0].image_url);
+        const validImages = images.filter(img => img.image_url && !img.image_url.startsWith('blob:'));
+        
+        if (validImages.length > 0) {
+          setProductImage(validImages[0].image_url);
         } else {
-          setProductImage(data.image_url || '');
+          // Only use product.image_url if it's not a blob URL
+          if (data.image_url && !data.image_url.startsWith('blob:')) {
+            setProductImage(data.image_url);
+          } else {
+            setProductImage('');
+          }
         }
       } else {
         navigate('/products');
@@ -342,11 +348,20 @@ const Checkout = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex space-x-4">
-                    <img 
-                      src={productImage || '/placeholder.svg'} 
-                      alt={product.name}
-                      className="w-20 h-20 object-cover rounded"
-                    />
+                    {productImage ? (
+                      <img 
+                        src={productImage} 
+                        alt={product?.name || 'Produto'}
+                        className="w-20 h-20 object-cover rounded"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
+                        <div className="text-gray-400 text-xs text-center">
+                          <div className="text-lg">📷</div>
+                          <div>Sem imagem</div>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex-1">
                       <h3 className="font-semibold">{product.name}</h3>
                       <p className="text-sm text-gray-600">{product.seller_name}</p>
