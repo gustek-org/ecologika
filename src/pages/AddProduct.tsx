@@ -1,22 +1,22 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const AddProduct = () => {
   const { user, profile, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if not authenticated or not a seller
   if (!isAuthenticated || !user) {
@@ -33,89 +33,78 @@ const AddProduct = () => {
     name: '',
     description: '',
     material: '',
-    quantity: 1,
-    unit: 'kg',
+    category: '',
     price: '',
-    location: profile?.location || '',
-    images: [] as string[],
-    co2_savings: '',
+    quantity: '',
+    unit: 'kg',
+    location: '',
+    image_url: '',
+    co2_savings: ''
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const formatPriceInput = (value: string) => {
-    // Remove tudo que não for número
-    const numericValue = value.replace(/\D/g, '');
+  const formatPrice = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/[^\d]/g, '');
+    
+    // Se não há números, retorna vazio
+    if (!numbers) return '';
     
     // Converte para número e divide por 100 para ter centavos
-    const floatValue = parseFloat(numericValue) / 100;
+    const numberValue = parseInt(numbers) / 100;
     
     // Formata como moeda brasileira
-    if (isNaN(floatValue) || floatValue === 0) {
-      return '';
-    }
-    
-    return floatValue.toLocaleString('pt-BR', {
+    return numberValue.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     });
   };
 
-  const parsePriceValue = (formattedPrice: string): number => {
-    if (!formattedPrice) return 0;
-    
-    // Remove símbolos de moeda e espaços, substitui vírgula por ponto
-    const numericString = formattedPrice
-      .replace(/[R$\s]/g, '')
-      .replace(/\./g, '')
-      .replace(',', '.');
-    
-    return parseFloat(numericString) || 0;
+  const parsePrice = (formattedPrice: string): number => {
+    // Remove símbolos de moeda e converte para número
+    const numbers = formattedPrice.replace(/[^\d,]/g, '').replace(',', '.');
+    return parseFloat(numbers) || 0;
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedPrice = formatPriceInput(e.target.value);
-    setFormData(prev => ({ ...prev, price: formattedPrice }));
+    const formatted = formatPrice(e.target.value);
+    setFormData(prev => ({ ...prev, price: formatted }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const priceValue = parsePriceValue(formData.price);
-    
-    if (!formData.name || !formData.description || !formData.material || priceValue <= 0) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+    setIsLoading(true);
 
     try {
-      const { error } = await supabase
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        material: formData.material,
+        category: formData.category,
+        price: parsePrice(formData.price),
+        quantity: parseInt(formData.quantity) || 1,
+        unit: formData.unit,
+        location: formData.location,
+        image_url: formData.image_url,
+        co2_savings: formData.co2_savings, // This will be stored as text
+        seller_id: user.id,
+        seller_name: profile?.name || '',
+        seller_company: profile?.company || '',
+        is_active: true
+      };
+
+      console.log('Inserting product:', productData);
+
+      const { data, error } = await supabase
         .from('products')
-        .insert({
-          name: formData.name,
-          description: formData.description,
-          material: formData.material,
-          quantity: formData.quantity,
-          unit: formData.unit,
-          price: priceValue,
-          location: formData.location,
-          image_url: formData.images.length > 0 ? formData.images[0] : '/placeholder.svg',
-          co2_savings: formData.co2_savings,
-          seller_id: user.id,
-          seller_name: profile?.name || user.email || '',
-          seller_company: profile?.company || '',
-          is_active: true
-        });
+        .insert([productData])
+        .select();
 
       if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
+
+      console.log('Product created:', data);
 
       toast({
         title: "Produto adicionado!",
@@ -124,32 +113,15 @@ const AddProduct = () => {
 
       navigate('/my-products');
     } catch (error) {
-      console.error('Erro ao cadastrar produto:', error);
+      console.error('Erro ao adicionar produto:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível cadastrar o produto. Tente novamente.",
+        description: "Não foi possível adicionar o produto. Tente novamente.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
-  };
-
-  const addImage = () => {
-    const url = prompt('Digite a URL da imagem:');
-    if (url) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, url]
-      }));
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
   };
 
   return (
@@ -157,193 +129,149 @@ const AddProduct = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">Adicionar Produto</h1>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações do Produto</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center">Adicionar Novo Produto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nome do Produto *
-                  </label>
+                  <Label htmlFor="name">Nome do Produto *</Label>
                   <Input
+                    id="name"
+                    type="text"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Ex: Papel reciclado A4"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descrição *
-                  </label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Descreva seu produto sustentável..."
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Material *
-                    </label>
-                    <Select onValueChange={(value) => setFormData(prev => ({ ...prev, material: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o material" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Papel">Papel</SelectItem>
-                        <SelectItem value="Plástico">Plástico</SelectItem>
-                        <SelectItem value="Metal">Metal</SelectItem>
-                        <SelectItem value="Vidro">Vidro</SelectItem>
-                        <SelectItem value="Tecido">Tecido</SelectItem>
-                        <SelectItem value="Eletrônicos">Eletrônicos</SelectItem>
-                        <SelectItem value="Outros">Outros</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Localização
-                    </label>
-                    <Input
-                      value={formData.location}
-                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="Cidade, Estado"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quantidade *
-                    </label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData(prev => ({ ...prev, quantity: Number(e.target.value) }))}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Unidade
-                    </label>
-                    <Select onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={formData.unit} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="kg">kg</SelectItem>
-                        <SelectItem value="toneladas">toneladas</SelectItem>
-                        <SelectItem value="unidades">unidades</SelectItem>
-                        <SelectItem value="m²">m²</SelectItem>
-                        <SelectItem value="litros">litros</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Preço (R$) *
-                    </label>
-                    <Input
-                      type="text"
-                      value={formData.price}
-                      onChange={handlePriceChange}
-                      placeholder="R$ 0,00"
-                      required
-                    />
-                  </div>
+                  <Label htmlFor="material">Material *</Label>
+                  <Select value={formData.material} onValueChange={(value) => setFormData(prev => ({ ...prev, material: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o material" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Papel">Papel</SelectItem>
+                      <SelectItem value="Plástico">Plástico</SelectItem>
+                      <SelectItem value="Metal">Metal</SelectItem>
+                      <SelectItem value="Vidro">Vidro</SelectItem>
+                      <SelectItem value="Madeira">Madeira</SelectItem>
+                      <SelectItem value="Textil">Têxtil</SelectItem>
+                      <SelectItem value="Eletrônicos">Eletrônicos</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Economia de CO₂ (opcional)
-                  </label>
+                  <Label htmlFor="category">Categoria</Label>
                   <Input
+                    id="category"
                     type="text"
-                    value={formData.co2_savings}
-                    onChange={(e) => setFormData(prev => ({ ...prev, co2_savings: e.target.value }))}
-                    placeholder="Ex: 5kg de CO₂ economizados"
+                    value={formData.category}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    placeholder="Ex: Embalagens, Componentes..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Imagens do Produto
-                  </label>
-                  <div className="space-y-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={addImage}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Imagem (URL)
-                    </Button>
-                    
-                    {formData.images.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {formData.images.map((url, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={url}
-                              alt={`Produto ${index + 1}`}
-                              className="w-full h-24 object-cover rounded border"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-1 right-1 h-6 w-6 p-0"
-                              onClick={() => removeImage(index)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <Label htmlFor="price">Preço (R$) *</Label>
+                  <Input
+                    id="price"
+                    type="text"
+                    value={formData.price}
+                    onChange={handlePriceChange}
+                    placeholder="R$ 0,00"
+                    required
+                  />
                 </div>
 
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate('/my-products')}
-                    className="flex-1"
-                    disabled={isSubmitting}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Cadastrando...' : 'Adicionar Produto'}
-                  </Button>
+                <div>
+                  <Label htmlFor="quantity">Quantidade *</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                    required
+                  />
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+
+                <div>
+                  <Label htmlFor="unit">Unidade</Label>
+                  <Select value={formData.unit} onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">Quilogramas (kg)</SelectItem>
+                      <SelectItem value="ton">Toneladas (ton)</SelectItem>
+                      <SelectItem value="un">Unidades (un)</SelectItem>
+                      <SelectItem value="m²">Metros quadrados (m²)</SelectItem>
+                      <SelectItem value="m³">Metros cúbicos (m³)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="description">Descrição *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="location">Localização *</Label>
+                <Input
+                  id="location"
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="Cidade, Estado"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="image_url">URL da Imagem</Label>
+                <Input
+                  id="image_url"
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="co2_savings">Economia de CO₂ (opcional)</Label>
+                <Input
+                  id="co2_savings"
+                  type="text"
+                  value={formData.co2_savings}
+                  onChange={(e) => setFormData(prev => ({ ...prev, co2_savings: e.target.value }))}
+                  placeholder="Ex: 2.5 kg CO₂ por unidade"
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Adicionando...' : 'Adicionar Produto'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
 
       <Footer />

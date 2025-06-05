@@ -25,7 +25,7 @@ const Header = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">E</span>
               </div>
-              <span className="text-xl font-bold text-gray-800">EcoMarket</span>
+              <span className="text-xl font-bold text-gray-800">Ecologika</span>
             </Link>
             <div className="animate-pulse">Carregando...</div>
           </div>
@@ -42,7 +42,7 @@ const Header = () => {
             <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">E</span>
             </div>
-            <span className="text-xl font-bold text-gray-800">EcoMarket</span>
+            <span className="text-xl font-bold text-gray-800">Ecologika</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6">

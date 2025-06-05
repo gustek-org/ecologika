@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -42,7 +41,17 @@ const ProductDetails = () => {
         throw error;
       }
 
-      setProduct(data);
+      // Convert database format to Product interface
+      const formattedProduct = {
+        ...data,
+        co2_savings: data.co2_savings?.toString() || '', // Convert number to string
+        quantity: data.quantity || 1,
+        unit: data.unit || 'kg',
+        seller_name: data.seller_name || '',
+        seller_company: data.seller_company || '',
+      };
+
+      setProduct(formattedProduct);
     } catch (error) {
       console.error('Erro ao buscar produto:', error);
       toast({

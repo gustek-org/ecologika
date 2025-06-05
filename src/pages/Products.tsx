@@ -25,7 +25,7 @@ export interface Product {
   seller_company: string;
   description: string;
   image_url: string;
-  co2_savings: string;
+  co2_savings: string | number; // Accept both types
   is_active: boolean;
   created_at: string;
   seller_id: string;
@@ -51,6 +51,7 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
+      console.log('Fetching products...');
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -58,10 +59,23 @@ const Products = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
 
-      setProducts(data || []);
+      console.log('Fetched products:', data);
+      
+      // Convert database format to Product interface
+      const formattedProducts = data?.map(product => ({
+        ...product,
+        co2_savings: product.co2_savings?.toString() || '', // Convert number to string
+        quantity: product.quantity || 1,
+        unit: product.unit || 'kg',
+        seller_name: product.seller_name || '',
+        seller_company: product.seller_company || '',
+      })) || [];
+
+      setProducts(formattedProducts);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
       toast({
@@ -184,6 +198,11 @@ const Products = () => {
                   : 'Tente ajustar os filtros ou termo de busca.'
                 }
               </p>
+              {products.length === 0 && !showFavorites && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Total de produtos no banco: {products.length}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}

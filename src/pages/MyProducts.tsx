@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,7 +47,17 @@ const MyProducts = () => {
         throw error;
       }
 
-      setProducts(data || []);
+      // Convert database format to Product interface
+      const formattedProducts = data?.map(product => ({
+        ...product,
+        co2_savings: product.co2_savings?.toString() || '', // Convert number to string
+        quantity: product.quantity || 1,
+        unit: product.unit || 'kg',
+        seller_name: product.seller_name || '',
+        seller_company: product.seller_company || '',
+      })) || [];
+
+      setProducts(formattedProducts);
     } catch (error) {
       console.error('Erro ao buscar meus produtos:', error);
       toast({
