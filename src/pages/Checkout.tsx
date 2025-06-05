@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ShoppingCart, CreditCard, Truck, Leaf } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
@@ -30,6 +31,84 @@ interface Product {
   created_at: string;
 }
 
+const CheckoutSkeleton = () => (
+  <div className="min-h-screen bg-gray-50">
+    <Header />
+    
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <Skeleton className="h-8 w-48 mb-6" />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Product Info Skeleton */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex space-x-4">
+                  <Skeleton className="w-20 h-20 rounded" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-6 w-20" />
+                    <div className="flex items-center space-x-4">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-10 w-20" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 space-y-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-12 w-full rounded-lg" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Forms Skeleton */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <div className="grid grid-cols-2 gap-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-16 w-full rounded-lg" />
+              </CardContent>
+            </Card>
+
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
+);
+
 const Checkout = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -41,6 +120,7 @@ const Checkout = () => {
   
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(requestedQuantity);
+  const [isLoading, setIsLoading] = useState(true);
   const [shippingInfo, setShippingInfo] = useState({
     address: '',
     city: '',
@@ -93,8 +173,57 @@ const Checkout = () => {
         variant: "destructive",
       });
       navigate('/products');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Input masks and validation functions
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 11) {
+      return numbers.replace(/(\d{2})(\d{0,5})(\d{0,4})/, (match, p1, p2, p3) => {
+        if (p3) return `(${p1}) ${p2}-${p3}`;
+        if (p2) return `(${p1}) ${p2}`;
+        if (p1) return `(${p1}`;
+        return match;
+      });
+    }
+    return value.slice(0, 15); // Limit length
+  };
+
+  const formatZipCode = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 8) {
+      return numbers.replace(/(\d{5})(\d{0,3})/, (match, p1, p2) => {
+        if (p2) return `${p1}-${p2}`;
+        return p1;
+      });
+    }
+    return value.slice(0, 9); // Limit length
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setShippingInfo(prev => ({ ...prev, phone: formatted }));
+  };
+
+  const handleZipCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatZipCode(e.target.value);
+    setShippingInfo(prev => ({ ...prev, zipCode: formatted }));
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow positive numbers
+    if (value === '' || (/^\d+$/.test(value) && parseInt(value) > 0)) {
+      setQuantity(value === '' ? 1 : parseInt(value));
+    }
+  };
+
+  if (isLoading) {
+    return <CheckoutSkeleton />;
+  }
 
   if (!product) {
     return (
@@ -102,7 +231,7 @@ const Checkout = () => {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-800">Carregando produto...</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Produto não encontrado</h2>
           </div>
         </div>
         <Footer />
@@ -215,11 +344,9 @@ const Checkout = () => {
                       <div className="mt-2 flex items-center space-x-4">
                         <span className="text-sm">Quantidade:</span>
                         <Input
-                          type="number"
-                          min="1"
-                          max={product.quantity}
+                          type="text"
                           value={quantity}
-                          onChange={(e) => setQuantity(Number(e.target.value))}
+                          onChange={handleQuantityChange}
                           className="w-20"
                         />
                         <span className="text-sm text-gray-600">
@@ -257,7 +384,7 @@ const Checkout = () => {
                         <span className="text-sm font-medium">Impacto Ambiental</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        {quantity}x {product.co2_savings}
+                        {quantity}x {product.co2_savings}kg CO2 evitado
                       </p>
                     </div>
                   )}
@@ -318,8 +445,9 @@ const Checkout = () => {
                       </label>
                       <Input
                         value={shippingInfo.zipCode}
-                        onChange={(e) => setShippingInfo(prev => ({ ...prev, zipCode: e.target.value }))}
+                        onChange={handleZipCodeChange}
                         placeholder="00000-000"
+                        maxLength={9}
                       />
                     </div>
                     <div>
@@ -328,8 +456,9 @@ const Checkout = () => {
                       </label>
                       <Input
                         value={shippingInfo.phone}
-                        onChange={(e) => setShippingInfo(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={handlePhoneChange}
                         placeholder="(11) 99999-9999"
+                        maxLength={15}
                         required
                       />
                     </div>
@@ -357,8 +486,9 @@ const Checkout = () => {
               <Button 
                 onClick={handlePurchase}
                 className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
+                disabled={quantity < 1 || quantity > product.quantity}
               >
-                Confirmar Compra - {formatPrice(total)}
+                Confirmar Compra
               </Button>
             </div>
           </div>

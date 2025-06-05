@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Building, User, Heart, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
@@ -12,6 +14,88 @@ import Footer from '@/components/layout/Footer';
 import { Product } from '@/pages/Products';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
+const ProductDetailsSkeleton = () => (
+  <div className="min-h-screen bg-gray-50">
+    <Header />
+    
+    <div className="container mx-auto px-4 py-8">
+      <Button 
+        variant="ghost" 
+        className="mb-6"
+        disabled
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Voltar aos produtos
+      </Button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Imagem do produto - Skeleton */}
+        <div className="space-y-4">
+          <Skeleton className="aspect-square w-full rounded-lg" />
+        </div>
+
+        {/* Informações do produto - Skeleton */}
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-start justify-between mb-4">
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-10 w-10 rounded" />
+            </div>
+            
+            <Skeleton className="h-8 w-3/4 mb-4" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-2/3 mb-6" />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <Skeleton className="h-5 w-12" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+                
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
+);
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -65,15 +149,7 @@ const ProductDetails = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Carregando produto...</div>
-        </div>
-        <Footer />
-      </div>
-    );
+    return <ProductDetailsSkeleton />;
   }
 
   if (!product) {

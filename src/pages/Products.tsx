@@ -9,6 +9,7 @@ import ProductCard from '@/components/products/ProductCard';
 import ProductFilters from '@/components/products/ProductFilters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +31,22 @@ export interface Product {
   created_at: string;
   seller_id: string;
 }
+
+const ProductCardSkeleton = () => (
+  <Card className="overflow-hidden">
+    <Skeleton className="h-48 w-full" />
+    <div className="p-4 space-y-3">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+      <div className="flex justify-between items-center">
+        <Skeleton className="h-6 w-20" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+    </div>
+  </Card>
+);
 
 const Products = () => {
   const { t } = useLanguage();
@@ -103,7 +120,7 @@ const Products = () => {
   const filteredProducts = useMemo(() => {
     let result = products;
 
-    // Only apply filters if they have been changed from defaults
+    // Only apply filters if they have been changed from defaults OR if there's a search term
     if (filtersApplied || searchTerm) {
       result = products.filter(product => {
         const matchesSearch = searchTerm ? (
@@ -145,7 +162,30 @@ const Products = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Carregando produtos...</div>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">
+              {showFavorites ? 'Meus Favoritos' : 'Produtos Disponíveis'}
+            </h1>
+            
+            {/* Barra de busca - Skeleton */}
+            <div className="relative mb-6">
+              <Skeleton className="h-10 w-full" />
+            </div>
+            
+            {/* Filtros - Skeleton */}
+            {!showFavorites && (
+              <div className="mb-6">
+                <Skeleton className="h-32 w-full" />
+              </div>
+            )}
+          </div>
+
+          {/* Lista de produtos - Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
         <Footer />
       </div>
@@ -196,19 +236,16 @@ const Products = () => {
           <Card className="text-center py-12">
             <CardContent>
               <h3 className="text-xl font-semibold mb-2">
-                {showFavorites ? 'Nenhum produto favoritado' : 'Nenhum produto encontrado'}
+                {showFavorites ? 'Nenhum produto favoritado' : 'Nenhum produto disponível ou encontrado com os filtros'}
               </h3>
               <p className="text-gray-600">
                 {showFavorites 
                   ? 'Você ainda não favoritou nenhum produto.'
-                  : 'Tente ajustar os filtros ou termo de busca.'
+                  : filtersApplied || searchTerm 
+                    ? 'Tente ajustar os filtros ou termo de busca.'
+                    : 'Não há produtos disponíveis no momento.'
                 }
               </p>
-              {products.length === 0 && !showFavorites && (
-                <p className="text-sm text-gray-500 mt-2">
-                  Total de produtos no banco: {products.length}
-                </p>
-              )}
             </CardContent>
           </Card>
         )}
