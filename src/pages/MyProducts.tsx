@@ -132,7 +132,7 @@ const MyProducts = () => {
       </div>
     );
   }
-
+   
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -180,7 +180,7 @@ const MyProducts = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex gap-2">
                       <Badge className={getMaterialColor(product.material)}>
-                        {product.material}
+                        {product.image_url}
                       </Badge>
                       <Badge variant={product.is_active ? "default" : "secondary"}>
                         {product.is_active ? "Ativo" : "Inativo"}
