@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,43 +21,72 @@ interface ProductImageType {
   image_order: number;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = false, currentUserId }) => {
+const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavorites = false, currentUserId }) => {
   const { saveProduct, unsaveProduct, isProductSaved } = useAuth();
   const { fetchProductImages } = useProductImages();
   const navigate = useNavigate();
   const [images, setImages] = useState<ProductImageType[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
 
+  // Memoize computed values to prevent re-renders
+  const isSaved = useMemo(() => isProductSaved(product.id), [isProductSaved, product.id]);
+  const isOwnProduct = useMemo(() => currentUserId === product.seller_id, [currentUserId, product.seller_id]);
+  const displayImage = useMemo(() => 
+    images.length > 0 ? images[0].image_url : product.image_url,
+    [images, product.image_url]
+  );
+
   // Se está mostrando favoritos, só mostra produtos favoritados
-  if (showFavorites && !isProductSaved(product.id)) {
+  if (showFavorites && !isSaved) {
     return null;
   }
 
   useEffect(() => {
+    let isMounted = true;
+    
     const loadImages = async () => {
+      if (!isMounted) return;
+      
       setIsLoadingImages(true);
-      const productImages = await fetchProductImages(product.id);
-      // Convert to the expected type
-      const formattedImages = productImages.map(img => ({
-        id: img.id || '',
-        image_url: img.image_url,
-        image_order: img.image_order
-      }));
-      setImages(formattedImages);
-      setIsLoadingImages(false);
+      try {
+        const productImages = await fetchProductImages(product.id);
+        
+        if (!isMounted) return;
+        
+        // Convert to the expected type and filter out blob URLs
+        const formattedImages = productImages
+          .filter(img => img.image_url && !img.image_url.startsWith('blob:'))
+          .map(img => ({
+            id: img.id || '',
+            image_url: img.image_url,
+            image_order: img.image_order
+          }));
+        
+        setImages(formattedImages);
+      } catch (error) {
+        console.error('Error loading images:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoadingImages(false);
+        }
+      }
     };
 
     loadImages();
+
+    return () => {
+      isMounted = false;
+    };
   }, [product.id, fetchProductImages]);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = useCallback((price: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(price);
-  };
+  }, []);
 
-  const getMaterialColor = (material: string) => {
+  const getMaterialColor = useCallback((material: string) => {
     const colors = {
       'Papel': 'bg-green-100 text-green-800',
       'Plástico': 'bg-blue-100 text-blue-800',
@@ -65,25 +94,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = fals
       'Vidro': 'bg-purple-100 text-purple-800'
     };
     return colors[material as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
+  }, []);
 
-  const handleSaveProduct = (e: React.MouseEvent) => {
+  const handleSaveProduct = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isProductSaved(product.id)) {
+    if (isSaved) {
       unsaveProduct(product.id);
     } else {
       saveProduct(product.id);
     }
-  };
+  }, [isSaved, unsaveProduct, saveProduct, product.id]);
 
-  const handleViewDetails = () => {
+  const handleViewDetails = useCallback(() => {
     navigate(`/product/${product.id}`);
-  };
+  }, [navigate, product.id]);
 
-  const isOwnProduct = currentUserId === product.seller_id;
-
-  // Use first image from database or fallback to product.image_url
-  const displayImage = images.length > 0 ? images[0].image_url : product.image_url;
+  // Memoize the badge to prevent unnecessary re-renders
+  const materialBadge = useMemo(() => (
+    <Badge className={getMaterialColor(product.material)}>
+      {product.material}
+    </Badge>
+  ), [getMaterialColor, product.material]);
 
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
@@ -92,11 +123,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = fals
           <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
             <div className="text-gray-400">📷</div>
           </div>
-        ) : displayImage ? (
+        ) : displayImage && !displayImage.startsWith('blob:') ? (
           <img
             src={displayImage}
             alt={product.name}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -114,7 +146,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = fals
           onClick={handleSaveProduct}
         >
           <Heart 
-            className={`h-4 w-4 ${isProductSaved(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+            className={`h-4 w-4 ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
           />
         </Button>
         
@@ -128,9 +160,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = fals
       
       <CardContent className="flex-1 p-4">
         <div className="mb-2">
-          <Badge className={getMaterialColor(product.material)}>
-            {product.material}
-          </Badge>
+          {materialBadge}
         </div>
         
         <h3 className="text-lg font-semibold mb-2 line-clamp-2">{product.name}</h3>
@@ -187,6 +217,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, showFavorites = fals
       </CardFooter>
     </Card>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;
