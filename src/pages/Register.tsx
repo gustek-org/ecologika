@@ -22,7 +22,7 @@ const Register = () => {
     location: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { signup } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -39,22 +39,45 @@ const Register = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      toast({
+        title: t('common.error'),
+        description: 'A senha deve ter pelo menos 6 caracteres.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const success = await register(formData);
-      if (success) {
-        toast({
-          title: t('common.success'),
-          description: 'Conta criada com sucesso!',
-        });
-        navigate('/dashboard');
+      const { error } = await signup(formData.email, formData.password, {
+        name: formData.name,
+        type: formData.type,
+        company: formData.company,
+        location: formData.location,
+      });
+
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          toast({
+            title: t('common.error'),
+            description: 'Este email já está cadastrado. Tente fazer login.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: t('common.error'),
+            description: error.message || 'Erro ao criar conta.',
+            variant: 'destructive',
+          });
+        }
       } else {
         toast({
-          title: t('common.error'),
-          description: 'Erro ao criar conta. Tente novamente.',
-          variant: 'destructive',
+          title: t('common.success'),
+          description: 'Conta criada com sucesso! Verifique seu email para confirmar a conta.',
         });
+        navigate('/login');
       }
     } catch (error) {
       toast({
@@ -136,9 +159,8 @@ const Register = () => {
                     type="text"
                     value={formData.company}
                     onChange={(e) => handleInputChange('company', e.target.value)}
-                    required
                     className="mt-1"
-                    placeholder="Nome da empresa"
+                    placeholder="Nome da empresa (opcional)"
                   />
                 </div>
 
@@ -149,9 +171,8 @@ const Register = () => {
                     type="text"
                     value={formData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
-                    required
                     className="mt-1"
-                    placeholder="Cidade, Estado"
+                    placeholder="Cidade, Estado (opcional)"
                   />
                 </div>
                 
@@ -165,6 +186,7 @@ const Register = () => {
                     required
                     className="mt-1"
                     placeholder="••••••••"
+                    minLength={6}
                   />
                 </div>
 

@@ -9,7 +9,140 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          category: string | null
+          co2_savings: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          location: string | null
+          name: string
+          price: number
+          seller_id: string
+          sustainability_rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          co2_savings?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location?: string | null
+          name: string
+          price: number
+          seller_id: string
+          sustainability_rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          co2_savings?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location?: string | null
+          name?: string
+          price?: number
+          seller_id?: string
+          sustainability_rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          documents: string[] | null
+          email: string | null
+          id: string
+          is_approved: boolean | null
+          location: string | null
+          name: string | null
+          saved_products: string[] | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          documents?: string[] | null
+          email?: string | null
+          id: string
+          is_approved?: boolean | null
+          location?: string | null
+          name?: string | null
+          saved_products?: string[] | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          documents?: string[] | null
+          email?: string | null
+          id?: string
+          is_approved?: boolean | null
+          location?: string | null
+          name?: string | null
+          saved_products?: string[] | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          buyer_id: string
+          co2_saved: number | null
+          id: string
+          product_id: string
+          purchase_date: string | null
+          quantity: number | null
+          seller_id: string
+          status: string | null
+          total_price: number
+        }
+        Insert: {
+          buyer_id: string
+          co2_saved?: number | null
+          id?: string
+          product_id: string
+          purchase_date?: string | null
+          quantity?: number | null
+          seller_id: string
+          status?: string | null
+          total_price: number
+        }
+        Update: {
+          buyer_id?: string
+          co2_saved?: number | null
+          id?: string
+          product_id?: string
+          purchase_date?: string | null
+          quantity?: number | null
+          seller_id?: string
+          status?: string | null
+          total_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -6,14 +6,32 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Header = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { user, profile, logout, isLoading } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
+
+  if (isLoading) {
+    return (
+      <header className="bg-white shadow-md border-b border-green-100">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">E</span>
+              </div>
+              <span className="text-xl font-bold text-gray-800">EcoMarket</span>
+            </Link>
+            <div className="animate-pulse">Carregando...</div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="bg-white shadow-md border-b border-green-100">
@@ -33,19 +51,19 @@ const Header = () => {
             <Link to="/about" className="text-gray-600 hover:text-green-600 transition-colors">
               {t('nav.about')}
             </Link>
-            {isAuthenticated && (
+            {user && (
               <>
                 <Link to="/products" className="text-gray-600 hover:text-green-600 transition-colors">
                   {t('nav.products')}
                 </Link>
                 
-                {user?.type === 'buyer' && (
+                {profile?.type === 'buyer' && (
                   <Link to="/my-purchases" className="text-gray-600 hover:text-green-600 transition-colors">
                     Minhas Compras
                   </Link>
                 )}
                 
-                {user?.type === 'seller' && (
+                {profile?.type === 'seller' && (
                   <>
                     <Link to="/my-products" className="text-gray-600 hover:text-green-600 transition-colors">
                       Meus Produtos
@@ -79,9 +97,9 @@ const Header = () => {
               </button>
             </div>
 
-            {isAuthenticated ? (
+            {user ? (
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-600">Olá, {user?.name}</span>
+                <span className="text-sm text-gray-600">Olá, {profile?.name || user.email}</span>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   {t('nav.logout')}
                 </Button>

@@ -1,24 +1,30 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-interface User {
+interface UserProfile {
   id: string;
-  name: string;
-  email: string;
+  name: string | null;
+  email: string | null;
   type: 'buyer' | 'seller';
-  company?: string;
-  location?: string;
-  documents?: string[];
-  isApproved?: boolean;
-  savedProducts?: string[];
+  company: string | null;
+  location: string | null;
+  documents: string[] | null;
+  is_approved: boolean | null;
+  saved_products: string[] | null;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  register: (userData: Partial<User> & { password: string }) => Promise<boolean>;
-  isAuthenticated: boolean;
+  profile: UserProfile | null;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  signup: (email: string, password: string, userData: any) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
+  isLoading: boolean;
   saveProduct: (productId: string) => void;
   unsaveProduct: (productId: string) => void;
   isProductSaved: (productId: string) => boolean;
@@ -36,110 +42,166 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch user profile from the profiles table
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('ecomarket_user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      setIsAuthenticated(true);
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Defer profile fetching to avoid blocking auth state changes
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const saveProduct = (productId: string) => {
-    if (user) {
-      const savedProducts = user.savedProducts || [];
-      if (!savedProducts.includes(productId)) {
-        const updatedUser = {
-          ...user,
-          savedProducts: [...savedProducts, productId]
-        };
-        setUser(updatedUser);
-        localStorage.setItem('ecomarket_user', JSON.stringify(updatedUser));
+  const login = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    }
+  };
+
+  const signup = async (email: string, password: string, userData: any) => {
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: userData.name,
+            type: userData.type,
+            company: userData.company,
+            location: userData.location,
+          }
+        }
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    }
+  };
+
+  const saveProduct = async (productId: string) => {
+    if (!profile) return;
+    
+    const savedProducts = profile.saved_products || [];
+    if (!savedProducts.includes(productId)) {
+      const updatedSavedProducts = [...savedProducts, productId];
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ saved_products: updatedSavedProducts })
+        .eq('id', profile.id);
+
+      if (!error) {
+        setProfile({ ...profile, saved_products: updatedSavedProducts });
       }
     }
   };
 
-  const unsaveProduct = (productId: string) => {
-    if (user) {
-      const savedProducts = user.savedProducts || [];
-      const updatedUser = {
-        ...user,
-        savedProducts: savedProducts.filter(id => id !== productId)
-      };
-      setUser(updatedUser);
-      localStorage.setItem('ecomarket_user', JSON.stringify(updatedUser));
+  const unsaveProduct = async (productId: string) => {
+    if (!profile) return;
+    
+    const savedProducts = profile.saved_products || [];
+    const updatedSavedProducts = savedProducts.filter(id => id !== productId);
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ saved_products: updatedSavedProducts })
+      .eq('id', profile.id);
+
+    if (!error) {
+      setProfile({ ...profile, saved_products: updatedSavedProducts });
     }
   };
 
   const isProductSaved = (productId: string) => {
-    return user?.savedProducts?.includes(productId) || false;
-  };
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      // Simulate API call
-      const users = JSON.parse(localStorage.getItem('ecomarket_users') || '[]');
-      const foundUser = users.find((u: any) => u.email === email && u.password === password);
-      
-      if (foundUser) {
-        const { password: _, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword);
-        setIsAuthenticated(true);
-        localStorage.setItem('ecomarket_user', JSON.stringify(userWithoutPassword));
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
-    }
-  };
-
-  const register = async (userData: Partial<User> & { password: string }): Promise<boolean> => {
-    try {
-      const users = JSON.parse(localStorage.getItem('ecomarket_users') || '[]');
-      const newUser = {
-        id: Date.now().toString(),
-        name: userData.name || '',
-        email: userData.email || '',
-        type: userData.type || 'buyer' as const,
-        company: userData.company,
-        location: userData.location,
-        documents: userData.documents,
-        isApproved: userData.type === 'buyer' ? true : false,
-        savedProducts: [],
-        password: userData.password
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('ecomarket_users', JSON.stringify(users));
-      
-      const { password: _, ...userWithoutPassword } = newUser;
-      setUser(userWithoutPassword);
-      setIsAuthenticated(true);
-      localStorage.setItem('ecomarket_user', JSON.stringify(userWithoutPassword));
-      return true;
-    } catch (error) {
-      console.error('Registration error:', error);
-      return false;
-    }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('ecomarket_user');
+    return profile?.saved_products?.includes(productId) || false;
   };
 
   return (
     <AuthContext.Provider value={{
       user,
+      profile,
+      session,
       login,
+      signup,
       logout,
-      register,
-      isAuthenticated,
+      resetPassword,
+      isLoading,
       saveProduct,
       unsaveProduct,
       isProductSaved
