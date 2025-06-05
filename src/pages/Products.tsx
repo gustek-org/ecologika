@@ -2,14 +2,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/products/ProductCard';
 import ProductFilters from '@/components/products/ProductFilters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search, Heart } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,7 +25,7 @@ export interface Product {
   seller_company: string;
   description: string;
   image_url: string;
-  co2_savings: string | number; // Accept both types
+  co2_savings: string | number;
   is_active: boolean;
   created_at: string;
   seller_id: string;
@@ -35,15 +35,19 @@ const Products = () => {
   const { t } = useLanguage();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showFavorites, setShowFavorites] = useState(false);
+  const [filtersApplied, setFiltersApplied] = useState(false);
   const [filters, setFilters] = useState({
     material: '',
     location: '',
     priceRange: [0, 1000] as [number, number]
   });
+
+  // Check if showing favorites from URL
+  const showFavorites = searchParams.get('favorites') === 'true';
 
   useEffect(() => {
     fetchProducts();
@@ -68,7 +72,7 @@ const Products = () => {
       // Convert database format to Product interface
       const formattedProducts = data?.map(product => ({
         ...product,
-        co2_savings: product.co2_savings?.toString() || '', // Convert number to string
+        co2_savings: product.co2_savings?.toString() || '',
         quantity: product.quantity || 1,
         unit: product.unit || 'kg',
         seller_name: product.seller_name || '',
@@ -88,19 +92,36 @@ const Products = () => {
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.material.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesMaterial = !filters.material || product.material === filters.material;
-      const matchesLocation = !filters.location || product.location.includes(filters.location);
-      const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
+  const handleFiltersChange = (newFilters: any) => {
+    setFilters(newFilters);
+    // Check if any filter is different from default values
+    const hasActiveFilters = newFilters.material || newFilters.location || 
+      newFilters.priceRange[0] > 0 || newFilters.priceRange[1] < 1000;
+    setFiltersApplied(hasActiveFilters);
+  };
 
-      return matchesSearch && matchesMaterial && matchesLocation && matchesPrice;
-    });
-  }, [products, searchTerm, filters]);
+  const filteredProducts = useMemo(() => {
+    let result = products;
+
+    // Only apply filters if they have been changed from defaults
+    if (filtersApplied || searchTerm) {
+      result = products.filter(product => {
+        const matchesSearch = searchTerm ? (
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.material.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchTerm.toLowerCase())
+        ) : true;
+        
+        const matchesMaterial = !filters.material || product.material === filters.material;
+        const matchesLocation = !filters.location || product.location.includes(filters.location);
+        const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
+
+        return matchesSearch && matchesMaterial && matchesLocation && matchesPrice;
+      });
+    }
+
+    return result;
+  }, [products, searchTerm, filters, filtersApplied]);
 
   if (!isAuthenticated) {
     return (
@@ -137,26 +158,9 @@ const Products = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Produtos Disponíveis</h1>
-          
-          {/* Botões de visualização */}
-          <div className="flex gap-4 mb-6">
-            <Button
-              variant={!showFavorites ? "default" : "outline"}
-              onClick={() => setShowFavorites(false)}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Todos os Produtos
-            </Button>
-            <Button
-              variant={showFavorites ? "default" : "outline"}
-              onClick={() => setShowFavorites(true)}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              <Heart className="h-4 w-4 mr-2" />
-              Favoritos
-            </Button>
-          </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">
+            {showFavorites ? 'Meus Favoritos' : 'Produtos Disponíveis'}
+          </h1>
           
           {/* Barra de busca */}
           <div className="relative mb-6">
@@ -170,8 +174,10 @@ const Products = () => {
             />
           </div>
           
-          {/* Filtros */}
-          <ProductFilters filters={filters} onFiltersChange={setFilters} />
+          {/* Filtros - only show if not viewing favorites */}
+          {!showFavorites && (
+            <ProductFilters filters={filters} onFiltersChange={handleFiltersChange} />
+          )}
         </div>
 
         {/* Lista de produtos */}

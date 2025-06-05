@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,6 +76,9 @@ const AddProduct = () => {
     setIsLoading(true);
 
     try {
+      // Convert co2_savings to number if it has a numeric value, otherwise store as null
+      const co2SavingsValue = formData.co2_savings ? parseFloat(formData.co2_savings.replace(/[^\d.,]/g, '').replace(',', '.')) : null;
+
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -85,7 +89,7 @@ const AddProduct = () => {
         unit: formData.unit,
         location: formData.location,
         image_url: formData.image_url,
-        co2_savings: formData.co2_savings, // This will be stored as text
+        co2_savings: co2SavingsValue, // Now storing as number or null
         seller_id: user.id,
         seller_name: profile?.name || '',
         seller_company: profile?.company || '',

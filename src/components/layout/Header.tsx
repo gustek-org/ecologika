@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { User } from 'lucide-react';
+import { User, Heart } from 'lucide-react';
 
 const Header = () => {
   const { user, profile, logout, isLoading } = useAuth();
@@ -64,9 +64,15 @@ const Header = () => {
                 </Link>
                 
                 {profile?.type === 'buyer' && (
-                  <Link to="/my-purchases" className="text-gray-600 hover:text-green-600 transition-colors">
-                    Minhas Compras
-                  </Link>
+                  <>
+                    <Link to="/my-purchases" className="text-gray-600 hover:text-green-600 transition-colors">
+                      Minhas Compras
+                    </Link>
+                    <Link to="/products?favorites=true" className="text-gray-600 hover:text-green-600 transition-colors flex items-center">
+                      <Heart className="h-4 w-4 mr-1" />
+                      Favoritos
+                    </Link>
+                  </>
                 )}
                 
                 {profile?.type === 'seller' && (

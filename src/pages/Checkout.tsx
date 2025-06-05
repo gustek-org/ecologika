@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Product {
   id: string;
@@ -21,12 +22,12 @@ interface Product {
   unit: string;
   price: number;
   location: string;
-  sellerId: string;
-  seller: string;
-  sellerCompany: string;
-  images: string[];
-  co2Savings: string;
-  createdAt: string;
+  seller_id: string;
+  seller_name: string;
+  seller_company: string;
+  image_url: string;
+  co2_savings: string | number;
+  created_at: string;
 }
 
 const Checkout = () => {
@@ -56,17 +57,44 @@ const Checkout = () => {
 
   useEffect(() => {
     if (productId) {
-      const products = JSON.parse(localStorage.getItem('ecomarket_products') || '[]');
-      const foundProduct = products.find((p: Product) => p.id === productId);
-      if (foundProduct) {
-        setProduct(foundProduct);
-      } else {
-        navigate('/products');
-      }
+      fetchProduct();
     } else {
       navigate('/products');
     }
   }, [productId, navigate]);
+
+  const fetchProduct = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error('Error fetching product:', error);
+        throw error;
+      }
+
+      if (data) {
+        setProduct({
+          ...data,
+          co2_savings: data.co2_savings?.toString() || '',
+        });
+      } else {
+        navigate('/products');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produto:', error);
+      toast({
+        title: "Erro",
+        description: "Produto não encontrado.",
+        variant: "destructive",
+      });
+      navigate('/products');
+    }
+  };
 
   if (!product) {
     return (
@@ -74,13 +102,7 @@ const Checkout = () => {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-800">Produto não encontrado</h2>
-            <Button 
-              onClick={() => navigate('/products')} 
-              className="mt-4 bg-green-600 hover:bg-green-700"
-            >
-              Voltar aos Produtos
-            </Button>
+            <h2 className="text-2xl font-bold text-gray-800">Carregando produto...</h2>
           </div>
         </div>
         <Footer />
@@ -109,7 +131,7 @@ const Checkout = () => {
     return colors[material as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!shippingInfo.address || !shippingInfo.city || !shippingInfo.phone) {
       toast({
         title: "Erro",
@@ -119,33 +141,44 @@ const Checkout = () => {
       return;
     }
 
-    const purchase = {
-      id: Date.now().toString(),
-      productId: product.id,
-      productName: product.name,
-      quantity,
-      unitPrice: product.price,
-      totalPrice: total,
-      seller: product.seller,
-      sellerCompany: product.sellerCompany,
-      buyer: profile?.name || user.email || '',
-      buyerEmail: user.email,
-      shippingInfo,
-      co2Saved: product.co2Savings ? `${quantity}x ${product.co2Savings}` : 'Não informado',
-      purchaseDate: new Date().toISOString(),
-      status: 'Confirmado'
-    };
+    try {
+      // Create purchase record in Supabase
+      const purchaseData = {
+        buyer_id: user.id,
+        product_id: product.id,
+        seller_id: product.seller_id,
+        quantity,
+        total_price: total,
+        co2_saved: product.co2_savings ? parseFloat(product.co2_savings.toString()) * quantity : null,
+        status: 'completed'
+      };
 
-    // Save purchase
-    const existingPurchases = JSON.parse(localStorage.getItem('ecomarket_purchases') || '[]');
-    localStorage.setItem('ecomarket_purchases', JSON.stringify([...existingPurchases, purchase]));
+      const { data, error } = await supabase
+        .from('purchases')
+        .insert([purchaseData])
+        .select();
 
-    toast({
-      title: "Compra realizada!",
-      description: "Sua compra foi confirmada com sucesso.",
-    });
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-    navigate('/my-purchases');
+      console.log('Purchase created:', data);
+
+      toast({
+        title: "Compra realizada!",
+        description: "Sua compra foi confirmada com sucesso.",
+      });
+
+      navigate('/my-purchases');
+    } catch (error) {
+      console.error('Erro ao realizar compra:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível completar a compra. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -169,13 +202,13 @@ const Checkout = () => {
                 <CardContent>
                   <div className="flex space-x-4">
                     <img 
-                      src={product.images[0]} 
+                      src={product.image_url || '/placeholder.svg'} 
                       alt={product.name}
                       className="w-20 h-20 object-cover rounded"
                     />
                     <div className="flex-1">
                       <h3 className="font-semibold">{product.name}</h3>
-                      <p className="text-sm text-gray-600">{product.seller}</p>
+                      <p className="text-sm text-gray-600">{product.seller_name}</p>
                       <Badge className={`mt-1 ${getMaterialColor(product.material)}`}>
                         {product.material}
                       </Badge>
@@ -217,14 +250,14 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {product.co2Savings && (
+                  {product.co2_savings && (
                     <div className="mt-4 p-3 bg-green-50 rounded-lg">
                       <div className="flex items-center text-green-700">
                         <Leaf className="h-4 w-4 mr-2" />
                         <span className="text-sm font-medium">Impacto Ambiental</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        {quantity}x {product.co2Savings}
+                        {quantity}x {product.co2_savings}
                       </p>
                     </div>
                   )}
