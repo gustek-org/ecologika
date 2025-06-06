@@ -15,13 +15,13 @@ import { useToast } from '@/hooks/use-toast';
 import { User, LogOut, Settings, ShoppingBag, ShoppingCart } from 'lucide-react';
 
 const Header = () => {
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
       navigate('/');
       toast({
         title: "Logout realizado",
