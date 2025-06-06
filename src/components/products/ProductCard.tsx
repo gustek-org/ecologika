@@ -31,16 +31,39 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavor
   // Memoize computed values to prevent re-renders
   const isSaved = useMemo(() => isProductSaved(product.id), [isProductSaved, product.id]);
   const isOwnProduct = useMemo(() => currentUserId === product.seller_id, [currentUserId, product.seller_id]);
-  const displayImage = useMemo(() => 
-    images.length > 0 ? images[0].image_url : product.image_url,
-    [images, product.image_url]
-  );
+  
+  // Fix image display logic - use firstImage from props if available, otherwise use images from fetch
+  const displayImage = useMemo(() => {
+    // First try to use firstImage from props (already loaded in Products page)
+    if (product.firstImage && !product.firstImage.startsWith('blob:')) {
+      return product.firstImage;
+    }
+    // Then try images from fetch
+    if (images.length > 0 && !images[0].image_url.startsWith('blob:')) {
+      return images[0].image_url;
+    }
+    // Finally try original image_url
+    if (product.image_url && !product.image_url.startsWith('blob:')) {
+      return product.image_url;
+    }
+    return null;
+  }, [product.firstImage, product.image_url, images]);
+
+  const totalImages = useMemo(() => {
+    return product.totalImages || images.length;
+  }, [product.totalImages, images.length]);
 
   useEffect(() => {
     let isMounted = true;
     
     const loadImages = async () => {
       if (!isMounted) return;
+      
+      // If we already have firstImage from props, no need to fetch again
+      if (product.firstImage) {
+        setIsLoadingImages(false);
+        return;
+      }
       
       setIsLoadingImages(true);
       try {
@@ -72,7 +95,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavor
     return () => {
       isMounted = false;
     };
-  }, [product.id, fetchProductImages]);
+  }, [product.id, product.firstImage, fetchProductImages]);
 
   const formatPrice = useCallback((price: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -120,16 +143,20 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavor
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
       <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden relative">
-        {isLoadingImages ? (
+        {isLoadingImages && !product.firstImage ? (
           <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
             <div className="text-gray-400">📷</div>
           </div>
-        ) : displayImage && !displayImage.startsWith('blob:') ? (
+        ) : displayImage ? (
           <img
             src={displayImage}
             alt={product.name}
             className="w-full h-full object-cover"
             loading="lazy"
+            onError={(e) => {
+              console.error('Image failed to load:', displayImage);
+              e.currentTarget.style.display = 'none';
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -152,9 +179,9 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavor
         </Button>
         
         {/* Show image count if multiple images */}
-        {images.length > 1 && (
+        {totalImages > 1 && (
           <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-            +{images.length} fotos
+            +{totalImages} fotos
           </div>
         )}
       </div>

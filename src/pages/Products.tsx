@@ -39,7 +39,7 @@ interface ProductWithImages extends Product {
 }
 
 const ProductCardSkeleton = () => (
-  <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm">
+  <Card className="overflow-hidden border-0 shadow-lg">
     <Skeleton className="h-48 w-full" />
     <div className="p-4 space-y-3">
       <Skeleton className="h-4 w-3/4" />
@@ -162,7 +162,7 @@ const Products = () => {
       <div className="min-h-screen bg-gradient-to-br from-ecologika-light to-white">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <Card className="text-center py-12 border-0 shadow-xl bg-white/90 backdrop-blur-sm animate-fade-in">
+          <Card className="text-center py-12 border-0 shadow-xl bg-white/90 backdrop-blur-sm">
             <CardContent>
               <h2 className="text-2xl font-bold mb-4 text-ecologika-primary">Acesso Restrito</h2>
               <p className="text-gray-600">Você precisa estar logado para ver os produtos.</p>
@@ -179,8 +179,8 @@ const Products = () => {
       <div className="min-h-screen bg-gradient-to-br from-ecologika-light to-white">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <div className="mb-8 animate-fade-in">
-            <h1 className="text-4xl font-bold text-ecologika-primary mb-6 animate-slide-in">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-ecologika-primary mb-6">
               {showFavorites ? 'Meus Favoritos' : 'Produtos Disponíveis'}
             </h1>
             
@@ -200,9 +200,7 @@ const Products = () => {
           {/* Lista de produtos - Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="animate-fade-in" style={{animationDelay: `${i * 0.1}s`}}>
-                <ProductCardSkeleton />
-              </div>
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         </div>
@@ -217,12 +215,12 @@ const Products = () => {
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-ecologika-primary mb-6 animate-slide-in">
+          <h1 className="text-4xl font-bold text-ecologika-primary mb-6">
             {showFavorites ? 'Meus Favoritos' : 'Produtos Disponíveis'}
           </h1>
           
           {/* Barra de busca */}
-          <div className="relative mb-6 animate-fade-in">
+          <div className="relative mb-6">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-ecologika-primary h-5 w-5" />
             <Input
               type="text"
@@ -235,7 +233,7 @@ const Products = () => {
           
           {/* Filtros - only show if not viewing favorites */}
           {!showFavorites && (
-            <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
+            <div>
               <ProductFilters filters={filters} onFiltersChange={handleFiltersChange} />
             </div>
           )}
@@ -243,25 +241,20 @@ const Products = () => {
 
         {/* Lista de produtos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredProducts.map((product, index) => (
-            <div 
-              key={product.id} 
-              className="animate-fade-in transform hover:scale-105 transition-all duration-300"
-              style={{animationDelay: `${index * 0.1}s`}}
-            >
-              <ProductCard 
-                product={product}
-                showFavorites={showFavorites}
-                currentUserId={user?.id}
-              />
-            </div>
+          {filteredProducts.map((product) => (
+            <ProductCard 
+              key={product.id}
+              product={product}
+              showFavorites={showFavorites}
+              currentUserId={user?.id}
+            />
           ))}
         </div>
 
         {filteredProducts.length === 0 && !isLoading && (
-          <Card className="text-center py-16 border-0 shadow-xl bg-white/90 backdrop-blur-sm animate-fade-in">
+          <Card className="text-center py-16 border-0 shadow-xl bg-white/90 backdrop-blur-sm">
             <CardContent>
-              <div className="text-6xl mb-6 animate-bounce-gentle">📦</div>
+              <div className="text-6xl mb-6">📦</div>
               <h3 className="text-2xl font-bold mb-4 text-ecologika-primary">
                 {showFavorites ? 'Nenhum produto favoritado' : 'Nenhum produto disponível ou encontrado com os filtros'}
               </h3>
