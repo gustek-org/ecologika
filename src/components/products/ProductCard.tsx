@@ -36,11 +36,6 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavor
     [images, product.image_url]
   );
 
-  // Se está mostrando favoritos, só mostra produtos favoritados
-  if (showFavorites && !isSaved) {
-    return null;
-  }
-
   useEffect(() => {
     let isMounted = true;
     
@@ -115,6 +110,12 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavor
       {product.material}
     </Badge>
   ), [getMaterialColor, product.material]);
+
+  // Se está mostrando favoritos, só mostra produtos favoritados
+  // Move this check AFTER all hooks to avoid Rules of Hooks violation
+  if (showFavorites && !isSaved) {
+    return null;
+  }
 
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200">
