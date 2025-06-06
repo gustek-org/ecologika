@@ -12,7 +12,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { User, LogOut, Settings, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { User, LogOut, Heart, ShoppingCart } from 'lucide-react';
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -47,42 +47,19 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-green-600">EcoMarket</span>
+              <span className="text-2xl font-bold text-green-600">Ecologika</span>
             </Link>
           </div>
 
-          <nav className="hidden md:flex space-x-8">
-            <Link 
-              to="/products" 
-              className="text-gray-600 hover:text-green-600 transition-colors"
-            >
-              Produtos
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-gray-600 hover:text-green-600 transition-colors"
-            >
-              Sobre
-            </Link>
-            {isAuthenticated && (
-              <>
-                <Link 
-                  to="/add-product" 
-                  className="text-gray-600 hover:text-green-600 transition-colors"
-                >
-                  Vender
-                </Link>
-                <Link 
-                  to="/saved-products" 
-                  className="text-gray-600 hover:text-green-600 transition-colors"
-                >
-                  Favoritos
-                </Link>
-              </>
-            )}
-          </nav>
-
           <div className="flex items-center space-x-4">
+            {isAuthenticated && (
+              <Button asChild variant="ghost" size="icon">
+                <Link to="/saved-products">
+                  <Heart className="h-5 w-5 text-gray-500" />
+                </Link>
+              </Button>
+            )}
+
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
