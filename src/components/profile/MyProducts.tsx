@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,17 +84,17 @@ const ProductEditModal = ({
   product: ProductWithImages; 
   isOpen: boolean; 
   onOpenChange: (open: boolean) => void;
-  onSave: () => void;
+  onSave: (product: ProductWithImages) => void;
 }) => {
   const [formData, setFormData] = useState({
     name: product.name,
     description: product.description,
-    price: product.price,
+    price: product.price.toString(),
     material: product.material,
     location: product.location,
-    quantity: product.quantity,
+    quantity: product.quantity.toString(),
     unit: product.unit,
-    co2_savings: product.co2_savings,
+    co2_savings: product.co2_savings.toString(),
     category: product.category,
   });
   const { toast } = useToast();
@@ -104,17 +103,40 @@ const ProductEditModal = ({
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Validate numeric fields
+      const price = parseFloat(formData.price);
+      const quantity = parseInt(formData.quantity);
+      const co2_savings = formData.co2_savings ? parseFloat(formData.co2_savings) : null;
+
+      if (isNaN(price) || price <= 0) {
+        toast({
+          title: "Erro",
+          description: "Por favor, insira um preço válido.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (isNaN(quantity) || quantity <= 0) {
+        toast({
+          title: "Erro",
+          description: "Por favor, insira uma quantidade válida.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('products')
         .update({
           name: formData.name,
           description: formData.description,
-          price: formData.price,
+          price: price,
           material: formData.material,
           location: formData.location,
-          quantity: formData.quantity,
+          quantity: quantity,
           unit: formData.unit,
-          co2_savings: formData.co2_savings,
+          co2_savings: co2_savings,
           category: formData.category,
         })
         .eq('id', product.id);
@@ -128,7 +150,7 @@ const ProductEditModal = ({
         description: "Produto foi atualizado com sucesso.",
       });
       
-      onSave();
+      onSave(product);
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao atualizar produto:', error);
@@ -177,7 +199,7 @@ const ProductEditModal = ({
                 type="number"
                 step="0.01"
                 value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
               />
             </div>
             <div>
@@ -197,7 +219,7 @@ const ProductEditModal = ({
                 id="quantity"
                 type="number"
                 value={formData.quantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
               />
             </div>
             <div>
@@ -312,6 +334,10 @@ const ProductCard = ({
 
   const hasMultipleImages = product.allImages && product.allImages.length > 1;
 
+  const handleEditSave = (updatedProduct: ProductWithImages) => {
+    onEdit(updatedProduct);
+  };
+
   return (
     <>
       <Card className="h-full flex flex-col">
@@ -392,19 +418,19 @@ const ProductCard = ({
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 lg:flex-row lg:gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onToggleStatus(product.id, product.is_active)}
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
               {product.is_active ? 'Desativar' : 'Ativar'}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="flex-1 min-w-0"
               onClick={() => setShowEditModal(true)}
             >
               <Edit className="h-4 w-4 mr-1" />
@@ -414,7 +440,7 @@ const ProductCard = ({
               variant="outline"
               size="sm"
               onClick={() => onDelete(product.id)}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -426,7 +452,7 @@ const ProductCard = ({
         product={product}
         isOpen={showEditModal}
         onOpenChange={setShowEditModal}
-        onSave={onEdit}
+        onSave={handleEditSave}
       />
     </>
   );
@@ -562,7 +588,7 @@ const MyProducts = () => {
     }
   };
 
-  const handleProductEdit = () => {
+  const handleProductEdit = (product: ProductWithImages) => {
     fetchProducts(); // Recarregar produtos após edição
   };
 
