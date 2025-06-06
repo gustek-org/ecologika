@@ -108,6 +108,12 @@ const Login = () => {
               <CardTitle className="text-2xl font-bold text-gray-900">
                 {showForgotPassword ? 'Recuperar Senha' : t('nav.login')}
               </CardTitle>
+              {!showForgotPassword && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+                  <p className="text-blue-800 font-medium">Acesso Master:</p>
+                  <p className="text-blue-600">master@admin.com / master123</p>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               {showForgotPassword ? (

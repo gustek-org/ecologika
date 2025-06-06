@@ -1,12 +1,13 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { User, Heart } from 'lucide-react';
+import { User, Heart, Shield } from 'lucide-react';
 
 const Header = () => {
-  const { user, profile, logout, isLoading } = useAuth();
+  const { user, profile, logout, isLoading, isMaster, isApproved } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
@@ -47,7 +48,25 @@ const Header = () => {
               </>
             )}
             
-            {user && (
+            {user && isMaster && (
+              <>
+                <Link 
+                  to="/admin" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-colors duration-300 font-medium flex items-center space-x-1"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Painel Admin</span>
+                </Link>
+                <Link 
+                  to="/products" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-colors duration-300 font-medium"
+                >
+                  {t('nav.products')}
+                </Link>
+              </>
+            )}
+            
+            {user && isApproved && !isMaster && (
               <>
                 <Link 
                   to="/products" 
@@ -116,13 +135,15 @@ const Header = () => {
               <div className="text-ecologika-primary">Carregando...</div>
             ) : user ? (
               <div className="flex items-center space-x-3">
-                <Link 
-                  to="/profile" 
-                  className="flex items-center space-x-2 text-gray-700 hover:text-ecologika-primary transition-colors duration-300 bg-gray-50 hover:bg-ecologika-light px-3 py-2 rounded-lg"
-                >
-                  <User size={16} />
-                  <span className="text-sm font-medium">{profile?.name || user.email}</span>
-                </Link>
+                {(isApproved || isMaster) && (
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center space-x-2 text-gray-700 hover:text-ecologika-primary transition-colors duration-300 bg-gray-50 hover:bg-ecologika-light px-3 py-2 rounded-lg"
+                  >
+                    <User size={16} />
+                    <span className="text-sm font-medium">{profile?.name || user.email}</span>
+                  </Link>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm" 

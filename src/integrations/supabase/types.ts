@@ -44,6 +44,9 @@ export type Database = {
       products: {
         Row: {
           address: string | null
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          approved_at: string | null
+          approved_by: string | null
           category: string | null
           city: string | null
           co2_savings: number | null
@@ -58,6 +61,7 @@ export type Database = {
           name: string
           price: number
           quantity: number | null
+          rejection_reason: string | null
           seller_company: string | null
           seller_id: string
           seller_name: string | null
@@ -67,6 +71,11 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
           city?: string | null
           co2_savings?: number | null
@@ -81,6 +90,7 @@ export type Database = {
           name: string
           price: number
           quantity?: number | null
+          rejection_reason?: string | null
           seller_company?: string | null
           seller_id: string
           seller_name?: string | null
@@ -90,6 +100,11 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
           city?: string | null
           co2_savings?: number | null
@@ -104,6 +119,7 @@ export type Database = {
           name?: string
           price?: number
           quantity?: number | null
+          rejection_reason?: string | null
           seller_company?: string | null
           seller_id?: string
           seller_name?: string | null
@@ -111,10 +127,21 @@ export type Database = {
           unit?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          approved_at: string | null
+          approved_by: string | null
           company: string | null
           created_at: string | null
           documents: string[] | null
@@ -123,11 +150,18 @@ export type Database = {
           is_approved: boolean | null
           location: string | null
           name: string | null
+          rejection_reason: string | null
           saved_products: string[] | null
           type: string | null
           updated_at: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
         }
         Insert: {
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          approved_at?: string | null
+          approved_by?: string | null
           company?: string | null
           created_at?: string | null
           documents?: string[] | null
@@ -136,11 +170,18 @@ export type Database = {
           is_approved?: boolean | null
           location?: string | null
           name?: string | null
+          rejection_reason?: string | null
           saved_products?: string[] | null
           type?: string | null
           updated_at?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Update: {
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          approved_at?: string | null
+          approved_by?: string | null
           company?: string | null
           created_at?: string | null
           documents?: string[] | null
@@ -149,11 +190,21 @@ export type Database = {
           is_approved?: boolean | null
           location?: string | null
           name?: string | null
+          rejection_reason?: string | null
           saved_products?: string[] | null
           type?: string | null
           updated_at?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchases: {
         Row: {
@@ -207,7 +258,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      approval_status: "pending" | "approved" | "rejected"
+      user_type: "master" | "common"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -322,6 +374,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      approval_status: ["pending", "approved", "rejected"],
+      user_type: ["master", "common"],
+    },
   },
 } as const
