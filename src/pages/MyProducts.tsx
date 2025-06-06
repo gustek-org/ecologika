@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,21 +19,16 @@ interface ProductWithImages extends Product {
 }
 
 const MyProducts = () => {
-  const { user, profile, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { fetchProductImages } = useProductImages();
   const [products, setProducts] = useState<ProductWithImages[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect if not authenticated or not a seller
+  // Redirect if not authenticated
   if (!isAuthenticated || !user) {
     navigate('/login');
-    return null;
-  }
-
-  if (profile?.type !== 'seller') {
-    navigate('/');
     return null;
   }
 

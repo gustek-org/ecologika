@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -22,8 +21,7 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     name: profile?.name || '',
     company: profile?.company || '',
-    location: profile?.location || '',
-    type: profile?.type || 'buyer'
+    location: profile?.location || ''
   });
 
   if (!isAuthenticated) {
@@ -42,7 +40,6 @@ const Profile = () => {
           name: formData.name,
           company: formData.company,
           location: formData.location,
-          type: formData.type,
           updated_at: new Date().toISOString()
         })
         .eq('id', profile.id);
@@ -78,8 +75,7 @@ const Profile = () => {
     setFormData({
       name: profile?.name || '',
       company: profile?.company || '',
-      location: profile?.location || '',
-      type: profile?.type || 'buyer'
+      location: profile?.location || ''
     });
     setIsEditing(false);
   };
@@ -141,25 +137,6 @@ const Profile = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="type">Tipo de Conta</Label>
-                    <Select
-                      value={formData.type}
-                      onValueChange={(value: 'buyer' | 'seller') => 
-                        setFormData({ ...formData, type: value })
-                      }
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="buyer">Comprador</SelectItem>
-                        <SelectItem value="seller">Vendedor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
                     <Label htmlFor="location">Localização</Label>
                     <Input
                       id="location"
@@ -169,7 +146,7 @@ const Profile = () => {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div>
                     <Label htmlFor="company">Empresa</Label>
                     <Input
                       id="company"
@@ -182,19 +159,17 @@ const Profile = () => {
               </div>
 
               {/* Profile Statistics */}
-              {profile?.type === 'buyer' && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Estatísticas</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <h4 className="font-medium text-green-800">Produtos Salvos</h4>
-                      <p className="text-2xl font-bold text-green-600">
-                        {profile?.saved_products?.length || 0}
-                      </p>
-                    </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800">Estatísticas</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <h4 className="font-medium text-green-800">Produtos Salvos</h4>
+                    <p className="text-2xl font-bold text-green-600">
+                      {profile?.saved_products?.length || 0}
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">

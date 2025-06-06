@@ -8,7 +8,6 @@ interface UserProfile {
   id: string;
   name: string | null;
   email: string | null;
-  type: 'buyer' | 'seller';
   company: string | null;
   location: string | null;
   documents: string[] | null;
@@ -64,13 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Ensure type is properly cast
-      const profileData: UserProfile = {
-        ...data,
-        type: data.type as 'buyer' | 'seller'
-      };
-
-      setProfile(profileData);
+      setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -132,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           emailRedirectTo: redirectUrl,
           data: {
             name: userData.name,
-            type: userData.type,
             company: userData.company,
             location: userData.location,
           }

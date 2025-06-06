@@ -74,40 +74,34 @@ const Header = () => {
                   {t('nav.products')}
                 </Link>
                 
-                {profile?.type === 'buyer' && (
-                  <>
-                    <Link 
-                      to="/my-purchases" 
-                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
-                    >
-                      Minhas Compras
-                    </Link>
-                    <Link 
-                      to="/products?favorites=true" 
-                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium flex items-center space-x-1 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
-                    >
-                      <Heart className="h-4 w-4 transition-transform duration-300 hover:scale-110" />
-                      <span>Favoritos</span>
-                    </Link>
-                  </>
-                )}
+                <Link 
+                  to="/my-purchases" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                >
+                  Minhas Compras
+                </Link>
                 
-                {profile?.type === 'seller' && (
-                  <>
-                    <Link 
-                      to="/my-products" 
-                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
-                    >
-                      Meus Produtos
-                    </Link>
-                    <Link 
-                      to="/add-product" 
-                      className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
-                    >
-                      Adicionar Produto
-                    </Link>
-                  </>
-                )}
+                <Link 
+                  to="/my-products" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                >
+                  Meus Produtos
+                </Link>
+                
+                <Link 
+                  to="/add-product" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                >
+                  Adicionar Produto
+                </Link>
+                
+                <Link 
+                  to="/products?favorites=true" 
+                  className="text-gray-700 hover:text-ecologika-primary transition-all duration-300 font-medium flex items-center space-x-1 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-ecologika-primary after:transition-all after:duration-300 hover:after:w-full"
+                >
+                  <Heart className="h-4 w-4 transition-transform duration-300 hover:scale-110" />
+                  <span>Favoritos</span>
+                </Link>
               </>
             )}
           </nav>
