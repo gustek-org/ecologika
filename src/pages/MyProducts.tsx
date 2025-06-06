@@ -14,10 +14,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/pages/Products';
 import { useProductImages } from '@/hooks/useProductImages';
 
+interface ProductImage {
+  id?: string;
+  image_url: string;
+  image_order: number;
+}
+
 interface ProductWithImages extends Product {
   firstImage?: string;
   totalImages?: number;
-  allImages?: Array<{ id: string; image_url: string; image_order: number }>;
+  allImages?: ProductImage[];
 }
 
 const ProductCardSkeleton = () => (
@@ -245,7 +251,11 @@ const MyProducts = () => {
             seller_company: product.seller_company || '',
             firstImage,
             totalImages: images.length,
-            allImages: images,
+            allImages: images.map(img => ({
+              id: img.id || '',
+              image_url: img.image_url,
+              image_order: img.image_order
+            })),
           };
         }) || []
       );

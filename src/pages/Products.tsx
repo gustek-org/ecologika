@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,10 +32,16 @@ export interface Product {
   seller_id: string;
 }
 
+interface ProductImage {
+  id?: string;
+  image_url: string;
+  image_order: number;
+}
+
 interface ProductWithImages extends Product {
   firstImage?: string;
   totalImages?: number;
-  allImages?: Array<{ id: string; image_url: string; image_order: number }>;
+  allImages?: ProductImage[];
 }
 
 const ProductCardSkeleton = () => (
@@ -111,7 +116,11 @@ const Products = () => {
             seller_company: product.seller_company || '',
             firstImage,
             totalImages: validImages.length,
-            allImages: validImages,
+            allImages: validImages.map(img => ({
+              id: img.id || '',
+              image_url: img.image_url,
+              image_order: img.image_order
+            })),
           };
         }) || []
       );

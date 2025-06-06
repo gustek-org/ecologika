@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,12 @@ import { MapPin, Building, User, Heart, ChevronLeft, ChevronRight } from 'lucide
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useProductImages } from '@/hooks/useProductImages';
+
+interface ProductImage {
+  id?: string;
+  image_url: string;
+  image_order: number;
+}
 
 // Define the extended Product type with images
 interface ProductWithImages {
@@ -27,7 +32,7 @@ interface ProductWithImages {
   seller_id: string;
   firstImage?: string;
   totalImages?: number;
-  allImages?: Array<{ id: string; image_url: string; image_order: number }>;
+  allImages?: ProductImage[];
 }
 
 interface ProductCardProps {
@@ -36,17 +41,11 @@ interface ProductCardProps {
   currentUserId?: string;
 }
 
-interface ProductImageType {
-  id: string;
-  image_url: string;
-  image_order: number;
-}
-
 const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, showFavorites = false, currentUserId }) => {
   const { saveProduct, unsaveProduct, isProductSaved } = useAuth();
   const { fetchProductImages } = useProductImages();
   const navigate = useNavigate();
-  const [images, setImages] = useState<ProductImageType[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
