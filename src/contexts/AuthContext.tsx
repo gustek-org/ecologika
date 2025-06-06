@@ -13,11 +13,6 @@ interface UserProfile {
   documents: string[] | null;
   is_approved: boolean | null;
   saved_products: string[] | null;
-  user_type: 'master' | 'common' | null;
-  approval_status: 'pending' | 'approved' | 'rejected' | null;
-  approved_at: string | null;
-  approved_by: string | null;
-  rejection_reason: string | null;
 }
 
 interface AuthContextType {
@@ -30,9 +25,6 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: any }>;
   isLoading: boolean;
   isAuthenticated: boolean;
-  isMaster: boolean;
-  isApproved: boolean;
-  isPending: boolean;
   saveProduct: (productId: string) => void;
   unsaveProduct: (productId: string) => void;
   isProductSaved: (productId: string) => boolean;
@@ -56,9 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   const isAuthenticated = !!user && !!session;
-  const isMaster = profile?.user_type === 'master';
-  const isApproved = profile?.approval_status === 'approved';
-  const isPending = profile?.approval_status === 'pending';
 
   // Fetch user profile from the profiles table
   const fetchProfile = async (userId: string) => {
@@ -215,9 +204,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       resetPassword,
       isLoading,
       isAuthenticated,
-      isMaster,
-      isApproved,
-      isPending,
       saveProduct,
       unsaveProduct,
       isProductSaved

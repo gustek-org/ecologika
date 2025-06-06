@@ -18,70 +18,31 @@ import AddProduct from "./pages/AddProduct";
 import MyProducts from "./pages/MyProducts";
 import SavedProducts from "./pages/SavedProducts";
 import Profile from "./pages/Profile";
-import AdminDashboard from "./pages/AdminDashboard";
-import PendingApproval from "./pages/PendingApproval";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
-  const { isAuthenticated, isLoading, isMaster, isApproved, isPending } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
 
-  // Redirect logic based on user status
-  const getRedirectPath = () => {
-    if (!isAuthenticated) return null;
-    
-    if (isMaster) return "/admin";
-    if (isPending) return "/pending-approval";
-    if (isApproved) return "/products";
-    
-    return "/pending-approval";
-  };
-
-  const redirectPath = getRedirectPath();
-
   return (
     <Routes>
-      <Route path="/" element={
-        isAuthenticated ? <Navigate to={redirectPath || "/products"} replace /> : <Landing />
-      } />
+      <Route path="/" element={isAuthenticated ? <Navigate to="/products" replace /> : <Landing />} />
       <Route path="/about" element={<About />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/pending-approval" element={
-        isAuthenticated && isPending ? <PendingApproval /> : <Navigate to="/" replace />
-      } />
-      <Route path="/admin" element={
-        isAuthenticated && isMaster ? <AdminDashboard /> : <Navigate to="/" replace />
-      } />
-      <Route path="/products" element={
-        isAuthenticated && (isApproved || isMaster) ? <Products /> : <Navigate to="/" replace />
-      } />
-      <Route path="/product/:id" element={
-        isAuthenticated && (isApproved || isMaster) ? <ProductDetails /> : <Navigate to="/" replace />
-      } />
-      <Route path="/checkout" element={
-        isAuthenticated && (isApproved || isMaster) ? <Checkout /> : <Navigate to="/" replace />
-      } />
-      <Route path="/my-purchases" element={
-        isAuthenticated && (isApproved || isMaster) ? <MyPurchases /> : <Navigate to="/" replace />
-      } />
-      <Route path="/add-product" element={
-        isAuthenticated && (isApproved || isMaster) ? <AddProduct /> : <Navigate to="/" replace />
-      } />
-      <Route path="/my-products" element={
-        isAuthenticated && (isApproved || isMaster) ? <MyProducts /> : <Navigate to="/" replace />
-      } />
-      <Route path="/saved-products" element={
-        isAuthenticated && (isApproved || isMaster) ? <SavedProducts /> : <Navigate to="/" replace />
-      } />
-      <Route path="/profile" element={
-        isAuthenticated && (isApproved || isMaster) ? <Profile /> : <Navigate to="/" replace />
-      } />
+      <Route path="/products" element={<Products />} />
+      <Route path="/product/:id" element={<ProductDetails />} />
+      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/my-purchases" element={<MyPurchases />} />
+      <Route path="/add-product" element={<AddProduct />} />
+      <Route path="/my-products" element={<MyProducts />} />
+      <Route path="/saved-products" element={<SavedProducts />} />
+      <Route path="/profile" element={<Profile />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

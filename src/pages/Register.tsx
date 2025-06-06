@@ -105,9 +105,6 @@ const Register = () => {
               <CardTitle className="text-2xl font-bold text-gray-900">
                 {t('nav.register')}
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-2">
-                Seu cadastro será analisado antes da aprovação
-              </p>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
