@@ -4,13 +4,33 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Building, User, Heart } from 'lucide-react';
-import { Product } from '@/pages/Products';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useProductImages } from '@/hooks/useProductImages';
 
+// Define the extended Product type with images
+interface ProductWithImages {
+  id: string;
+  name: string;
+  material: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  location: string;
+  seller_name: string;
+  seller_company: string;
+  description: string;
+  image_url: string;
+  co2_savings: string | number;
+  is_active: boolean;
+  created_at: string;
+  seller_id: string;
+  firstImage?: string;
+  totalImages?: number;
+}
+
 interface ProductCardProps {
-  product: Product;
+  product: ProductWithImages;
   showFavorites?: boolean;
   currentUserId?: string;
 }
