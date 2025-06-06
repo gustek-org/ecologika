@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Menu, X } from 'lucide-react';
+import { LogOut, User, Menu, X, Heart, Plus } from 'lucide-react';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -41,37 +41,32 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">E</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">EcoMarket</span>
+            <img 
+              src="https://images.unsplash.com/photo-1555419979-c8db0c608eb1?w=40&h=40&fit=crop&crop=center" 
+              alt="Ecologika" 
+              className="w-8 h-8 rounded-lg object-cover"
+            />
+            <span className="text-xl font-bold text-gray-900">Ecologika</span>
           </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/products" 
-              className="text-gray-600 hover:text-green-600 transition-colors"
-            >
-              {t('nav.products')}
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-gray-600 hover:text-green-600 transition-colors"
-            >
-              {t('nav.about')}
-            </Link>
-          </nav>
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <Link 
-                  to="/add-product"
-                  className="text-green-600 hover:text-green-700 font-medium"
+                  to="/saved-products"
+                  className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  title="Produtos Salvos"
                 >
-                  Vender Produto
+                  <Heart className="h-5 w-5" />
+                </Link>
+                
+                <Link 
+                  to="/add-product"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Vender Produto</span>
                 </Link>
                 
                 <DropdownMenu>
@@ -90,6 +85,7 @@ const Header = () => {
                       <span>Meu Perfil</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/saved-products')}>
+                      <Heart className="mr-2 h-4 w-4" />
                       <span>Produtos Salvos</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout}>
@@ -125,29 +121,23 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
-              <Link 
-                to="/products" 
-                className="text-gray-600 hover:text-green-600 transition-colors px-4 py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {t('nav.products')}
-              </Link>
-              <Link 
-                to="/about" 
-                className="text-gray-600 hover:text-green-600 transition-colors px-4 py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {t('nav.about')}
-              </Link>
-              
               {isAuthenticated ? (
                 <>
                   <Link 
-                    to="/add-product"
-                    className="text-green-600 hover:text-green-700 font-medium px-4 py-2"
+                    to="/saved-products"
+                    className="flex items-center text-red-500 hover:text-red-600 transition-colors px-4 py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Vender Produto
+                    <Heart className="h-4 w-4 mr-2" />
+                    Produtos Salvos
+                  </Link>
+                  <Link 
+                    to="/add-product"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors mx-4"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Vender Produto</span>
                   </Link>
                   <Link 
                     to="/profile"
@@ -155,13 +145,6 @@ const Header = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Meu Perfil
-                  </Link>
-                  <Link 
-                    to="/saved-products"
-                    className="text-gray-600 hover:text-green-600 transition-colors px-4 py-2"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Produtos Salvos
                   </Link>
                   <button 
                     onClick={() => {
