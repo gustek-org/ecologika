@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { CountrySelectImproved } from '@/components/ui/country-select-improved';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -17,9 +17,10 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    type: 'buyer' as 'buyer' | 'seller',
     company: '',
-    location: ''
+    country: '',
+    city: '',
+    address: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
@@ -53,9 +54,11 @@ const Register = () => {
     try {
       const { error } = await signup(formData.email, formData.password, {
         name: formData.name,
-        type: formData.type,
         company: formData.company,
-        location: formData.location,
+        location: `${formData.city}, ${formData.country}`,
+        country: formData.country,
+        city: formData.city,
+        address: formData.address,
       });
 
       if (error) {
@@ -109,24 +112,6 @@ const Register = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="type">Tipo de Conta</Label>
-                  <RadioGroup
-                    value={formData.type}
-                    onValueChange={(value) => handleInputChange('type', value)}
-                    className="mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="buyer" id="buyer" />
-                      <Label htmlFor="buyer">{t('auth.buyer')}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="seller" id="seller" />
-                      <Label htmlFor="seller">{t('auth.seller')}</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <div>
                   <Label htmlFor="name">{t('auth.name')}</Label>
                   <Input
                     id="name"
@@ -165,14 +150,37 @@ const Register = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="location">{t('auth.location')}</Label>
+                  <CountrySelectImproved
+                    label="País"
+                    value={formData.country}
+                    onValueChange={(value) => handleInputChange('country', value)}
+                    placeholder="Selecione seu país"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="city">Cidade</Label>
                   <Input
-                    id="location"
+                    id="city"
                     type="text"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    value={formData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    required
                     className="mt-1"
-                    placeholder="Cidade, Estado (opcional)"
+                    placeholder="Sua cidade"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="address">Endereço</Label>
+                  <Input
+                    id="address"
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    className="mt-1"
+                    placeholder="Seu endereço (opcional)"
                   />
                 </div>
                 

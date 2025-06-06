@@ -127,6 +127,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: userData.name,
             company: userData.company,
             location: userData.location,
+            country: userData.country,
+            city: userData.city,
+            address: userData.address,
           }
         }
       });
