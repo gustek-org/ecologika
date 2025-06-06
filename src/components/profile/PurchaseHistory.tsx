@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -183,6 +182,8 @@ const PurchaseHistory = () => {
     if (!user) return;
 
     try {
+      console.log('Fetching purchases for user:', user.id);
+      
       // First get the purchases where current user is the buyer
       const { data: purchasesData, error: purchasesError } = await supabase
         .from('purchases')
@@ -199,30 +200,40 @@ const PurchaseHistory = () => {
         .eq('buyer_id', user.id)
         .order('purchase_date', { ascending: false });
 
+      console.log('Purchases data:', purchasesData);
+      console.log('Purchases error:', purchasesError);
+
       if (purchasesError) {
         throw purchasesError;
       }
 
       if (!purchasesData || purchasesData.length === 0) {
+        console.log('No purchases found');
         setPurchases([]);
         return;
       }
 
-      // Get seller profiles separately
-      const sellerIds = purchasesData.map(p => p.seller_id);
+      // Get unique seller IDs
+      const sellerIds = [...new Set(purchasesData.map(p => p.seller_id))];
+      console.log('Seller IDs:', sellerIds);
+
+      // Get seller profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, name, email, company, location')
         .in('id', sellerIds);
 
+      console.log('Profiles data:', profilesData);
+      console.log('Profiles error:', profilesError);
+
       if (profilesError) {
-        console.error('Erro ao buscar profiles:', profilesError);
-        // Continue without seller info if profiles fetch fails
+        console.error('Erro ao buscar profiles dos vendedores:', profilesError);
       }
 
       // Combine the data
       const formattedData = purchasesData.map(item => {
         const sellerProfile = profilesData?.find(p => p.id === item.seller_id);
+        console.log('Seller profile for ID', item.seller_id, ':', sellerProfile);
         
         return {
           id: item.id,
@@ -233,12 +244,13 @@ const PurchaseHistory = () => {
           status: item.status,
           seller_name: sellerProfile?.name || 'Não informado',
           seller_email: sellerProfile?.email || 'Não informado',
-          seller_company: sellerProfile?.company || '',
-          seller_location: sellerProfile?.location || '',
+          seller_company: sellerProfile?.company || 'Não informado',
+          seller_location: sellerProfile?.location || 'Não informado',
           co2_saved: item.co2_saved || 0,
         };
       });
 
+      console.log('Formatted data:', formattedData);
       setPurchases(formattedData);
     } catch (error) {
       console.error('Erro ao buscar histórico de compras:', error);
