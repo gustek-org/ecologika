@@ -81,7 +81,7 @@ const AdminDashboard = () => {
   const handleUserApproval = async (userId: string, approved: boolean, rejectionReason?: string) => {
     try {
       const updateData = {
-        approval_status: approved ? 'approved' : 'rejected',
+        approval_status: approved ? 'approved' as const : 'rejected' as const,
         approved_at: approved ? new Date().toISOString() : null,
         approved_by: user?.id,
         rejection_reason: rejectionReason || null,
@@ -114,7 +114,7 @@ const AdminDashboard = () => {
   const handleProductApproval = async (productId: string, approved: boolean, rejectionReason?: string) => {
     try {
       const updateData = {
-        approval_status: approved ? 'approved' : 'rejected',
+        approval_status: approved ? 'approved' as const : 'rejected' as const,
         approved_at: approved ? new Date().toISOString() : null,
         approved_by: user?.id,
         rejection_reason: rejectionReason || null
