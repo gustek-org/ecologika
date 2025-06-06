@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -51,13 +50,29 @@ const Header = () => {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Language Tabs */}
-            <Tabs value={language} onValueChange={(value) => setLanguage(value as 'pt' | 'en')}>
-              <TabsList className="grid w-full grid-cols-2 bg-green-50">
-                <TabsTrigger value="pt" className="text-xs data-[state=active]:bg-green-100">PT</TabsTrigger>
-                <TabsTrigger value="en" className="text-xs data-[state=active]:bg-green-100">EN</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            {/* Language Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setLanguage('pt')}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  language === 'pt'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                PT
+              </button>
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  language === 'en'
+                    ? 'bg-teal-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                EN
+              </button>
+            </div>
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
@@ -121,14 +136,30 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
-              {/* Language Tabs Mobile */}
+              {/* Language Toggle Mobile */}
               <div className="px-4">
-                <Tabs value={language} onValueChange={(value) => setLanguage(value as 'pt' | 'en')}>
-                  <TabsList className="grid w-full grid-cols-2 bg-green-50">
-                    <TabsTrigger value="pt" className="text-xs data-[state=active]:bg-green-100">PT</TabsTrigger>
-                    <TabsTrigger value="en" className="text-xs data-[state=active]:bg-green-100">EN</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setLanguage('pt')}
+                    className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                      language === 'pt'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    PT
+                  </button>
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                      language === 'en'
+                        ? 'bg-teal-600 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
               </div>
 
               {isAuthenticated ? (
