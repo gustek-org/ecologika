@@ -183,7 +183,8 @@ const SoldProducts = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // First get the purchases where current user is the seller
+      const { data: purchasesData, error: purchasesError } = await supabase
         .from('purchases')
         .select(`
           id,
@@ -192,29 +193,51 @@ const SoldProducts = () => {
           purchase_date,
           status,
           co2_saved,
-          products!inner(name),
-          profiles!purchases_buyer_id_fkey(name, email, company, location)
+          buyer_id,
+          products!inner(name)
         `)
         .eq('seller_id', user.id)
         .order('purchase_date', { ascending: false });
 
-      if (error) {
-        throw error;
+      if (purchasesError) {
+        throw purchasesError;
       }
 
-      const formattedData = data?.map(item => ({
-        id: item.id,
-        product_name: item.products.name,
-        quantity: item.quantity,
-        total_price: item.total_price,
-        purchase_date: item.purchase_date,
-        status: item.status,
-        buyer_name: item.profiles.name || 'Não informado',
-        buyer_email: item.profiles.email || 'Não informado',
-        buyer_company: item.profiles.company || '',
-        buyer_location: item.profiles.location || '',
-        co2_saved: item.co2_saved || 0,
-      })) || [];
+      if (!purchasesData || purchasesData.length === 0) {
+        setSoldProducts([]);
+        return;
+      }
+
+      // Get buyer profiles separately
+      const buyerIds = purchasesData.map(p => p.buyer_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email, company, location')
+        .in('id', buyerIds);
+
+      if (profilesError) {
+        console.error('Erro ao buscar profiles:', profilesError);
+        // Continue without buyer info if profiles fetch fails
+      }
+
+      // Combine the data
+      const formattedData = purchasesData.map(item => {
+        const buyerProfile = profilesData?.find(p => p.id === item.buyer_id);
+        
+        return {
+          id: item.id,
+          product_name: item.products.name,
+          quantity: item.quantity,
+          total_price: item.total_price,
+          purchase_date: item.purchase_date,
+          status: item.status,
+          buyer_name: buyerProfile?.name || 'Não informado',
+          buyer_email: buyerProfile?.email || 'Não informado',
+          buyer_company: buyerProfile?.company || '',
+          buyer_location: buyerProfile?.location || '',
+          co2_saved: item.co2_saved || 0,
+        };
+      });
 
       setSoldProducts(formattedData);
     } catch (error) {
