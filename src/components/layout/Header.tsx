@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,10 +20,12 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/75c38a0d-fba9-485d-914e-54b13cd3c77e.png" 
-              alt="Ecologika" 
-              className="h-10 w-auto"
+            <div 
+              className="h-10 w-32 bg-no-repeat bg-contain bg-center"
+              style={{
+                backgroundImage: "url('/lovable-uploads/75c38a0d-fba9-485d-914e-54b13cd3c77e.png')"
+              }}
+              aria-label="Ecologika"
             />
           </Link>
 

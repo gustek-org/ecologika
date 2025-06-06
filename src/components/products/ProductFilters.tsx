@@ -100,10 +100,9 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
     // Se não há números, retorna vazio
     if (!numbers) return '';
     
-    // Converte para número e divide por 100 para ter centavos
-    const numberValue = parseInt(numbers) / 100;
+    // Converte para número e formata como moeda brasileira
+    const numberValue = parseFloat(numbers) / 100;
     
-    // Formata como moeda brasileira
     return numberValue.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL'
@@ -119,12 +118,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPrice(e.target.value);
     const numericValue = parsePrice(formatted);
+    e.target.value = formatted;
     updateFilter('priceRange', [numericValue, filters.priceRange[1]]);
   };
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPrice(e.target.value);
     const numericValue = parsePrice(formatted);
+    e.target.value = formatted;
     updateFilter('priceRange', [filters.priceRange[0], numericValue]);
   };
 
@@ -225,7 +226,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
             </Label>
             <Input
               type="text"
-              value={filters.priceRange[0] > 0 ? formatPrice(filters.priceRange[0].toString() + '00') : ''}
+              defaultValue={filters.priceRange[0] > 0 ? formatPrice((filters.priceRange[0] * 100).toString()) : ''}
               onChange={handleMinPriceChange}
               placeholder="R$ 0,00"
               className="h-10 text-sm"
@@ -239,7 +240,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
             </Label>
             <Input
               type="text"
-              value={filters.priceRange[1] < 1000 ? formatPrice(filters.priceRange[1].toString() + '00') : ''}
+              defaultValue={filters.priceRange[1] < 1000 ? formatPrice((filters.priceRange[1] * 100).toString()) : ''}
               onChange={handleMaxPriceChange}
               placeholder="R$ 1.000,00"
               className="h-10 text-sm"
