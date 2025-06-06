@@ -23,6 +23,11 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
   const [locations, setLocations] = useState<string[]>([]);
   const [countries, setCountries] = useState<string[]>([]);
 
+  // Placeholder values to avoid empty strings
+  const ALL_MATERIALS = "__all_materials__";
+  const ALL_COUNTRIES = "__all_countries__";
+  const ALL_LOCATIONS = "__all_locations__";
+
   useEffect(() => {
     fetchFilterOptions();
   }, []);
@@ -67,9 +72,15 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
   };
 
   const updateFilter = (key: string, value: any) => {
+    // Convert placeholder values back to empty strings for the filter logic
+    let actualValue = value;
+    if (value === ALL_MATERIALS || value === ALL_COUNTRIES || value === ALL_LOCATIONS) {
+      actualValue = '';
+    }
+    
     onFiltersChange({
       ...filters,
-      [key]: value
+      [key]: actualValue
     });
   };
 
@@ -120,6 +131,11 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
   const hasActiveFilters = filters.material || filters.location || filters.country ||
     filters.priceRange[0] > 0 || filters.priceRange[1] < 1000;
 
+  // Helper function to get the current select value, converting empty strings to placeholder values
+  const getSelectValue = (filterValue: string, placeholderValue: string) => {
+    return filterValue === '' ? placeholderValue : filterValue;
+  };
+
   return (
     <Card className="mb-6">
       <CardContent className="p-4">
@@ -147,12 +163,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
             <Label className="text-sm font-medium mb-2 block">
               Material
             </Label>
-            <Select value={filters.material} onValueChange={(value) => updateFilter('material', value)}>
+            <Select value={getSelectValue(filters.material, ALL_MATERIALS)} onValueChange={(value) => updateFilter('material', value)}>
               <SelectTrigger className="h-10">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg">
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value={ALL_MATERIALS}>Todos</SelectItem>
                 {materials.map((material) => (
                   <SelectItem key={material} value={material}>
                     {material}
@@ -167,12 +183,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
             <Label className="text-sm font-medium mb-2 block">
               País
             </Label>
-            <Select value={filters.country} onValueChange={(value) => updateFilter('country', value)}>
+            <Select value={getSelectValue(filters.country, ALL_COUNTRIES)} onValueChange={(value) => updateFilter('country', value)}>
               <SelectTrigger className="h-10">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg">
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value={ALL_COUNTRIES}>Todos</SelectItem>
                 {countries.map((country) => (
                   <SelectItem key={country} value={country}>
                     {country}
@@ -187,12 +203,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
             <Label className="text-sm font-medium mb-2 block">
               Localização
             </Label>
-            <Select value={filters.location} onValueChange={(value) => updateFilter('location', value)}>
+            <Select value={getSelectValue(filters.location, ALL_LOCATIONS)} onValueChange={(value) => updateFilter('location', value)}>
               <SelectTrigger className="h-10">
                 <SelectValue placeholder="Todas" />
               </SelectTrigger>
               <SelectContent className="bg-white border shadow-lg">
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value={ALL_LOCATIONS}>Todas</SelectItem>
                 {locations.map((location) => (
                   <SelectItem key={location} value={location}>
                     {location}
