@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CountrySelect } from '@/components/ui/country-select';
+import { CountrySelectImproved } from '@/components/ui/country-select-improved';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -272,7 +271,7 @@ const AddProduct = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <CountrySelect
+                    <CountrySelectImproved
                       label="País"
                       value={formData.country}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}

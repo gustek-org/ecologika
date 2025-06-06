@@ -73,6 +73,7 @@ const Products = () => {
   const [filters, setFilters] = useState({
     material: '',
     location: '',
+    country: '',
     priceRange: [0, 1000] as [number, number]
   });
 
@@ -141,7 +142,7 @@ const Products = () => {
   const handleFiltersChange = (newFilters: any) => {
     setFilters(newFilters);
     // Check if any filter is different from default values
-    const hasActiveFilters = newFilters.material || newFilters.location || 
+    const hasActiveFilters = newFilters.material || newFilters.location || newFilters.country ||
       newFilters.priceRange[0] > 0 || newFilters.priceRange[1] < 1000;
     setFiltersApplied(hasActiveFilters);
   };
@@ -160,9 +161,10 @@ const Products = () => {
         
         const matchesMaterial = !filters.material || product.material === filters.material;
         const matchesLocation = !filters.location || product.location.includes(filters.location);
+        const matchesCountry = !filters.country || product.country === filters.country;
         const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
 
-        return matchesSearch && matchesMaterial && matchesLocation && matchesPrice;
+        return matchesSearch && matchesMaterial && matchesLocation && matchesCountry && matchesPrice;
       });
     }
 

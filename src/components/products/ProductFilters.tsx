@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Filter, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,6 +12,7 @@ interface ProductFiltersProps {
   filters: {
     material: string;
     location: string;
+    country: string;
     priceRange: [number, number];
   };
   onFiltersChange: (filters: any) => void;
@@ -19,6 +21,7 @@ interface ProductFiltersProps {
 const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChange }) => {
   const [materials, setMaterials] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [countries, setCountries] = useState<string[]>([]);
 
   useEffect(() => {
     fetchFilterOptions();
@@ -38,6 +41,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
         .select('location')
         .eq('is_active', true);
 
+      // Buscar países únicos
+      const { data: countryData } = await supabase
+        .from('products')
+        .select('country')
+        .eq('is_active', true);
+
       if (materialData) {
         const uniqueMaterials = [...new Set(materialData.map(item => item.material).filter(Boolean))];
         setMaterials(uniqueMaterials);
@@ -46,6 +55,11 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
       if (locationData) {
         const uniqueLocations = [...new Set(locationData.map(item => item.location).filter(Boolean))];
         setLocations(uniqueLocations);
+      }
+
+      if (countryData) {
+        const uniqueCountries = [...new Set(countryData.map(item => item.country).filter(Boolean))];
+        setCountries(uniqueCountries);
       }
     } catch (error) {
       console.error('Erro ao buscar opções de filtro:', error);
@@ -63,11 +77,47 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
     onFiltersChange({
       material: '',
       location: '',
+      country: '',
       priceRange: [0, 1000] as [number, number]
     });
   };
 
-  const hasActiveFilters = filters.material || filters.location || 
+  const formatPrice = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/[^\d]/g, '');
+    
+    // Se não há números, retorna vazio
+    if (!numbers) return '';
+    
+    // Converte para número e divide por 100 para ter centavos
+    const numberValue = parseInt(numbers) / 100;
+    
+    // Formata como moeda brasileira
+    return numberValue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  };
+
+  const parsePrice = (formattedPrice: string): number => {
+    // Remove símbolos de moeda e converte para número
+    const numbers = formattedPrice.replace(/[^\d,]/g, '').replace(',', '.');
+    return parseFloat(numbers) || 0;
+  };
+
+  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPrice(e.target.value);
+    const numericValue = parsePrice(formatted);
+    updateFilter('priceRange', [numericValue, filters.priceRange[1]]);
+  };
+
+  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPrice(e.target.value);
+    const numericValue = parsePrice(formatted);
+    updateFilter('priceRange', [filters.priceRange[0], numericValue]);
+  };
+
+  const hasActiveFilters = filters.material || filters.location || filters.country ||
     filters.priceRange[0] > 0 || filters.priceRange[1] < 1000;
 
   return (
@@ -91,74 +141,92 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({ filters, onFiltersChang
           )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Material */}
           <div>
-            <Label htmlFor="material" className="text-sm font-medium mb-2 block">
+            <Label className="text-sm font-medium mb-2 block">
               Material
             </Label>
-            <select
-              id="material"
-              value={filters.material}
-              onChange={(e) => updateFilter('material', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Todos</option>
-              {materials.map((material) => (
-                <option key={material} value={material}>
-                  {material}
-                </option>
-              ))}
-            </select>
+            <Select value={filters.material} onValueChange={(value) => updateFilter('material', value)}>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border shadow-lg">
+                <SelectItem value="">Todos</SelectItem>
+                {materials.map((material) => (
+                  <SelectItem key={material} value={material}>
+                    {material}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* País */}
+          <div>
+            <Label className="text-sm font-medium mb-2 block">
+              País
+            </Label>
+            <Select value={filters.country} onValueChange={(value) => updateFilter('country', value)}>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border shadow-lg">
+                <SelectItem value="">Todos</SelectItem>
+                {countries.map((country) => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Localização */}
           <div>
-            <Label htmlFor="location" className="text-sm font-medium mb-2 block">
+            <Label className="text-sm font-medium mb-2 block">
               Localização
             </Label>
-            <select
-              id="location"
-              value={filters.location}
-              onChange={(e) => updateFilter('location', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Todas</option>
-              {locations.map((location) => (
-                <option key={location} value={location}>
-                  {location}
-                </option>
-              ))}
-            </select>
+            <Select value={filters.location} onValueChange={(value) => updateFilter('location', value)}>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border shadow-lg">
+                <SelectItem value="">Todas</SelectItem>
+                {locations.map((location) => (
+                  <SelectItem key={location} value={location}>
+                    {location}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Preço mínimo */}
           <div>
-            <Label htmlFor="minPrice" className="text-sm font-medium mb-2 block">
-              Preço mínimo (R$)
+            <Label className="text-sm font-medium mb-2 block">
+              Preço mínimo
             </Label>
             <Input
-              id="minPrice"
-              type="number"
-              min="0"
-              value={filters.priceRange[0]}
-              onChange={(e) => updateFilter('priceRange', [Number(e.target.value), filters.priceRange[1]])}
-              className="text-sm"
+              type="text"
+              value={filters.priceRange[0] > 0 ? formatPrice(filters.priceRange[0].toString() + '00') : ''}
+              onChange={handleMinPriceChange}
+              placeholder="R$ 0,00"
+              className="h-10 text-sm"
             />
           </div>
 
           {/* Preço máximo */}
           <div>
-            <Label htmlFor="maxPrice" className="text-sm font-medium mb-2 block">
-              Preço máximo (R$)
+            <Label className="text-sm font-medium mb-2 block">
+              Preço máximo
             </Label>
             <Input
-              id="maxPrice"
-              type="number"
-              min="0"
-              value={filters.priceRange[1]}
-              onChange={(e) => updateFilter('priceRange', [filters.priceRange[0], Number(e.target.value)])}
-              className="text-sm"
+              type="text"
+              value={filters.priceRange[1] < 1000 ? formatPrice(filters.priceRange[1].toString() + '00') : ''}
+              onChange={handleMaxPriceChange}
+              placeholder="R$ 1.000,00"
+              className="h-10 text-sm"
             />
           </div>
         </div>
