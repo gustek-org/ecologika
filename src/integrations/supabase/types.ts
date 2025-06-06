@@ -43,8 +43,11 @@ export type Database = {
       }
       products: {
         Row: {
+          address: string | null
           category: string | null
+          city: string | null
           co2_savings: number | null
+          country: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -63,8 +66,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           category?: string | null
+          city?: string | null
           co2_savings?: number | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -83,8 +89,11 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           category?: string | null
+          city?: string | null
           co2_savings?: number | null
+          country?: string | null
           created_at?: string | null
           description?: string | null
           id?: string

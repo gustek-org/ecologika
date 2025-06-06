@@ -22,6 +22,9 @@ export interface Product {
   unit: string;
   price: number;
   location: string;
+  country: string;
+  city: string;
+  address: string;
   seller_name: string;
   seller_company: string;
   description: string;
@@ -115,6 +118,9 @@ const Products = () => {
             unit: product.unit || 'kg',
             seller_name: product.seller_name || '',
             seller_company: product.seller_company || '',
+            country: product.country || '',
+            city: product.city || '',
+            address: product.address || '',
             firstImage,
             totalImages: validImages.length,
             allImages: validImages.map(img => ({
