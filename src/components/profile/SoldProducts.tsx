@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -183,6 +182,8 @@ const SoldProducts = () => {
     if (!user) return;
 
     try {
+      console.log('Fetching sold products for user:', user.id);
+      
       // First get the purchases where current user is the seller
       const { data: purchasesData, error: purchasesError } = await supabase
         .from('purchases')
@@ -199,30 +200,40 @@ const SoldProducts = () => {
         .eq('seller_id', user.id)
         .order('purchase_date', { ascending: false });
 
+      console.log('Purchases data:', purchasesData);
+      console.log('Purchases error:', purchasesError);
+
       if (purchasesError) {
         throw purchasesError;
       }
 
       if (!purchasesData || purchasesData.length === 0) {
+        console.log('No purchases found');
         setSoldProducts([]);
         return;
       }
 
-      // Get buyer profiles separately
-      const buyerIds = purchasesData.map(p => p.buyer_id);
+      // Get unique buyer IDs
+      const buyerIds = [...new Set(purchasesData.map(p => p.buyer_id))];
+      console.log('Buyer IDs:', buyerIds);
+
+      // Get buyer profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, name, email, company, location')
         .in('id', buyerIds);
 
+      console.log('Profiles data:', profilesData);
+      console.log('Profiles error:', profilesError);
+
       if (profilesError) {
-        console.error('Erro ao buscar profiles:', profilesError);
-        // Continue without buyer info if profiles fetch fails
+        console.error('Erro ao buscar profiles dos compradores:', profilesError);
       }
 
       // Combine the data
       const formattedData = purchasesData.map(item => {
         const buyerProfile = profilesData?.find(p => p.id === item.buyer_id);
+        console.log('Buyer profile for ID', item.buyer_id, ':', buyerProfile);
         
         return {
           id: item.id,
@@ -233,12 +244,13 @@ const SoldProducts = () => {
           status: item.status,
           buyer_name: buyerProfile?.name || 'Não informado',
           buyer_email: buyerProfile?.email || 'Não informado',
-          buyer_company: buyerProfile?.company || '',
-          buyer_location: buyerProfile?.location || '',
+          buyer_company: buyerProfile?.company || 'Não informado',
+          buyer_location: buyerProfile?.location || 'Não informado',
           co2_saved: item.co2_saved || 0,
         };
       });
 
+      console.log('Formatted data:', formattedData);
       setSoldProducts(formattedData);
     } catch (error) {
       console.error('Erro ao buscar produtos vendidos:', error);
