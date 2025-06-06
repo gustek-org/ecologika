@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Settings, Key, Box, History, BarChart } from 'lucide-react';
+import { Settings, Key, Box, History, BarChart, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProfileSidebarProps {
@@ -14,6 +14,7 @@ const ProfileSidebar = ({ activeSection, onSectionChange }: ProfileSidebarProps)
     { id: 'profile', label: 'Configurações de perfil', icon: Settings },
     { id: 'password', label: 'Mudar senha', icon: Key },
     { id: 'products', label: 'Meus produtos', icon: Box },
+    { id: 'sold-products', label: 'Produtos vendidos', icon: ShoppingBag },
     { id: 'purchases', label: 'Histórico de compras', icon: History },
     { id: 'emissions', label: 'Relatório de emissões', icon: BarChart },
   ];

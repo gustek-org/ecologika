@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -94,7 +95,7 @@ const ProductEditModal = ({
     location: product.location,
     quantity: product.quantity.toString(),
     unit: product.unit,
-    co2_savings: product.co2_savings.toString(),
+    co2_savings: product.co2_savings?.toString() || '',
     category: product.category,
   });
   const { toast } = useToast();
@@ -418,31 +419,33 @@ const ProductCard = ({
             </div>
           </div>
           
-          <div className="flex flex-col gap-2 lg:flex-row lg:gap-2">
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onToggleStatus(product.id, product.is_active)}
+                className="flex-1"
+              >
+                {product.is_active ? 'Desativar' : 'Ativar'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(product.id)}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onToggleStatus(product.id, product.is_active)}
-              className="flex-1 min-w-0"
-            >
-              {product.is_active ? 'Desativar' : 'Ativar'}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 min-w-0"
+              className="w-full"
               onClick={() => setShowEditModal(true)}
             >
               <Edit className="h-4 w-4 mr-1" />
               Ver Detalhes
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDelete(product.id)}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-            >
-              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>

@@ -8,6 +8,7 @@ import ProfileSidebar from '@/components/profile/ProfileSidebar';
 import ProfileSettings from '@/components/profile/ProfileSettings';
 import ChangePassword from '@/components/profile/ChangePassword';
 import MyProducts from '@/components/profile/MyProducts';
+import SoldProducts from '@/components/profile/SoldProducts';
 import PurchaseHistory from '@/components/profile/PurchaseHistory';
 import EmissionsReport from '@/components/profile/EmissionsReport';
 
@@ -29,6 +30,8 @@ const Profile = () => {
         return <ChangePassword />;
       case 'products':
         return <MyProducts />;
+      case 'sold-products':
+        return <SoldProducts />;
       case 'purchases':
         return <PurchaseHistory />;
       case 'emissions':
