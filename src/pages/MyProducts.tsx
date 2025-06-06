@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Plus, Package } from 'lucide-react';
+import { MapPin, Plus, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -16,6 +17,7 @@ import { useProductImages } from '@/hooks/useProductImages';
 interface ProductWithImages extends Product {
   firstImage?: string;
   totalImages?: number;
+  allImages?: Array<{ id: string; image_url: string; image_order: number }>;
 }
 
 const ProductCardSkeleton = () => (
@@ -45,6 +47,155 @@ const ProductCardSkeleton = () => (
     </CardContent>
   </Card>
 );
+
+const MyProductCard = ({ product, onToggleStatus }: { 
+  product: ProductWithImages; 
+  onToggleStatus: (id: string, currentStatus: boolean) => void; 
+}) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const navigate = useNavigate();
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(price);
+  };
+
+  const getMaterialColor = (material: string) => {
+    const colors = {
+      'Papel': 'bg-green-100 text-green-800',
+      'Plástico': 'bg-blue-100 text-blue-800',
+      'Metal': 'bg-gray-100 text-gray-800',
+      'Vidro': 'bg-purple-100 text-purple-800'
+    };
+    return colors[material as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const nextImage = () => {
+    if (product.allImages && product.allImages.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % product.allImages!.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (product.allImages && product.allImages.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + product.allImages!.length) % product.allImages!.length);
+    }
+  };
+
+  const currentImage = product.allImages && product.allImages.length > 0 
+    ? product.allImages[currentImageIndex]?.image_url 
+    : product.firstImage || product.image_url;
+
+  const hasMultipleImages = product.allImages && product.allImages.length > 1;
+
+  return (
+    <Card className="h-full flex flex-col">
+      <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden relative group">
+        {currentImage ? (
+          <img
+            src={currentImage}
+            alt={product.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-1">📷</div>
+              <p className="text-xs">Sem imagem</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Navigation arrows for multiple images */}
+        {hasMultipleImages && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={prevImage}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={nextImage}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+        
+        {/* Show image count if multiple images */}
+        {hasMultipleImages && (
+          <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+            {currentImageIndex + 1}/{product.allImages!.length}
+          </div>
+        )}
+      </div>
+      
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex gap-2">
+            <Badge className={getMaterialColor(product.material)}>
+              {product.material}
+            </Badge>
+            <Badge variant={product.is_active ? "default" : "secondary"}>
+              {product.is_active ? "Ativo" : "Inativo"}
+            </Badge>
+          </div>
+        </div>
+        <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
+      </CardHeader>
+      
+      <CardContent className="flex-1 pt-0">
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+        
+        <div className="space-y-2 text-sm text-gray-600 mb-4">
+          <div className="flex items-center">
+            <MapPin className="h-4 w-4 mr-1" />
+            <span>{product.location}</span>
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <span className="text-lg font-bold text-green-600">
+              {formatPrice(product.price)}
+            </span>
+            <span className="text-sm text-gray-500 ml-1">
+              / {product.quantity} {product.unit}
+            </span>
+          </div>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onToggleStatus(product.id, product.is_active)}
+            className="flex-1"
+          >
+            {product.is_active ? 'Desativar' : 'Ativar'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => navigate(`/product/${product.id}`)}
+          >
+            Ver Detalhes
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const MyProducts = () => {
   const { user, isAuthenticated } = useAuth();
@@ -94,6 +245,7 @@ const MyProducts = () => {
             seller_company: product.seller_company || '',
             firstImage,
             totalImages: images.length,
+            allImages: images,
           };
         }) || []
       );
@@ -109,23 +261,6 @@ const MyProducts = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(price);
-  };
-
-  const getMaterialColor = (material: string) => {
-    const colors = {
-      'Papel': 'bg-green-100 text-green-800',
-      'Plástico': 'bg-blue-100 text-blue-800',
-      'Metal': 'bg-gray-100 text-gray-800',
-      'Vidro': 'bg-purple-100 text-purple-800'
-    };
-    return colors[material as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
   const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
@@ -161,18 +296,6 @@ const MyProducts = () => {
       });
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Carregando seus produtos...</div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
    
   return (
     <div className="min-h-screen bg-gray-50">
@@ -214,85 +337,11 @@ const MyProducts = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
-              <Card key={product.id} className="h-full flex flex-col">
-                <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden relative">
-                  {product.firstImage ? (
-                    <img
-                      src={product.firstImage}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                      <div className="text-center text-gray-500">
-                        <div className="text-2xl mb-1">📷</div>
-                        <p className="text-xs">Sem imagem</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Show image count if multiple images */}
-                  {product.totalImages && product.totalImages > 1 && (
-                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                      +{product.totalImages} fotos
-                    </div>
-                  )}
-                </div>
-                
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex gap-2">
-                      <Badge className={getMaterialColor(product.material)}>
-                        {product.material}
-                      </Badge>
-                      <Badge variant={product.is_active ? "default" : "secondary"}>
-                        {product.is_active ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
-                </CardHeader>
-                
-                <CardContent className="flex-1 pt-0">
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-                  
-                  <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span>{product.location}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <span className="text-lg font-bold text-green-600">
-                        {formatPrice(product.price)}
-                      </span>
-                      <span className="text-sm text-gray-500 ml-1">
-                        / {product.quantity} {product.unit}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleProductStatus(product.id, product.is_active)}
-                      className="flex-1"
-                    >
-                      {product.is_active ? 'Desativar' : 'Ativar'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                    >
-                      Editar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <MyProductCard 
+                key={product.id} 
+                product={product} 
+                onToggleStatus={toggleProductStatus}
+              />
             ))}
           </div>
         )}

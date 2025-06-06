@@ -36,6 +36,7 @@ export interface Product {
 interface ProductWithImages extends Product {
   firstImage?: string;
   totalImages?: number;
+  allImages?: Array<{ id: string; image_url: string; image_order: number }>;
 }
 
 const ProductCardSkeleton = () => (
@@ -96,9 +97,10 @@ const Products = () => {
       // Convert database format to Product interface and load images
       const formattedProducts = await Promise.all(
         data?.map(async (product) => {
-          // Load images for each product
+          // Load all images for each product
           const images = await fetchProductImages(product.id);
-          const firstImage = images.length > 0 ? images[0].image_url : product.image_url;
+          const validImages = images.filter(img => img.image_url && !img.image_url.startsWith('blob:'));
+          const firstImage = validImages.length > 0 ? validImages[0].image_url : product.image_url;
           
           return {
             ...product,
@@ -108,7 +110,8 @@ const Products = () => {
             seller_name: product.seller_name || '',
             seller_company: product.seller_company || '',
             firstImage,
-            totalImages: images.length,
+            totalImages: validImages.length,
+            allImages: validImages,
           };
         }) || []
       );
