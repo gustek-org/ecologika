@@ -13,6 +13,7 @@ import { Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useProductImages } from '@/hooks/useProductImages';
+import { useMinimumLoadingTime } from '@/hooks/useMinimumLoadingTime';
 
 export interface Product {
   id: string;
@@ -79,6 +80,9 @@ const Products = () => {
     country: '',
     priceRange: [0, 1000] as [number, number]
   });
+
+  // Usar o hook para tempo mínimo de loading
+  const shouldShowLoading = useMinimumLoadingTime(isLoading, 1200);
 
   // Check if showing favorites from URL
   const showFavorites = searchParams.get('favorites') === 'true';
@@ -194,7 +198,7 @@ const Products = () => {
     );
   }
 
-  if (isLoading) {
+  if (shouldShowLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-ecologika-light to-white">
         <Header />
