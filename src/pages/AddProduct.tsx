@@ -29,14 +29,9 @@ const AddProduct = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<ProductImage[]>([]);
 
-  // Redirect if not authenticated or not a seller
+  // Redirect if not authenticated
   if (!isAuthenticated || !user) {
     navigate('/login');
-    return null;
-  }
-
-  if (profile?.type !== 'seller') {
-    navigate('/');
     return null;
   }
 

@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Plus, Package } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,34 @@ interface ProductWithImages extends Product {
   firstImage?: string;
   totalImages?: number;
 }
+
+const ProductCardSkeleton = () => (
+  <Card className="h-full flex flex-col">
+    <Skeleton className="aspect-video rounded-t-lg" />
+    <CardHeader className="pb-3">
+      <div className="flex items-start justify-between">
+        <div className="flex gap-2">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-16" />
+        </div>
+      </div>
+      <Skeleton className="h-6 w-3/4" />
+    </CardHeader>
+    <CardContent className="flex-1 pt-0">
+      <Skeleton className="h-10 w-full mb-4" />
+      <div className="space-y-2 mb-4">
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+      <div className="flex justify-between items-center mb-4">
+        <Skeleton className="h-6 w-20" />
+      </div>
+      <div className="flex gap-2">
+        <Skeleton className="h-8 flex-1" />
+        <Skeleton className="h-8 flex-1" />
+      </div>
+    </CardContent>
+  </Card>
+);
 
 const MyProducts = () => {
   const { user, isAuthenticated } = useAuth();
@@ -162,7 +190,13 @@ const MyProducts = () => {
           </Button>
         </div>
 
-        {products.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : products.length === 0 ? (
           <Card className="text-center py-12">
             <CardContent>
               <Package className="h-16 w-16 mx-auto text-gray-400 mb-4" />

@@ -16,6 +16,7 @@ import Checkout from "./pages/Checkout";
 import MyPurchases from "./pages/MyPurchases";
 import AddProduct from "./pages/AddProduct";
 import MyProducts from "./pages/MyProducts";
+import SavedProducts from "./pages/SavedProducts";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +41,7 @@ const AppRoutes = () => {
       <Route path="/my-purchases" element={<MyPurchases />} />
       <Route path="/add-product" element={<AddProduct />} />
       <Route path="/my-products" element={<MyProducts />} />
+      <Route path="/saved-products" element={<SavedProducts />} />
       <Route path="/profile" element={<Profile />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />

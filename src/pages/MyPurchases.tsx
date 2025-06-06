@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +29,23 @@ interface Purchase {
     unit: string;
   };
 }
+
+const PurchaseRowSkeleton = () => (
+  <TableRow>
+    <TableCell>
+      <div>
+        <Skeleton className="h-4 w-32 mb-1" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+    </TableCell>
+    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+  </TableRow>
+);
 
 const MyPurchases = () => {
   const { user, isAuthenticated } = useAuth();
@@ -201,7 +217,11 @@ const MyPurchases = () => {
                   <Package className="h-8 w-8 text-blue-600 mr-3" />
                   <div>
                     <p className="text-sm text-gray-600">Total de Compras</p>
-                    <p className="text-2xl font-bold">{purchases.length}</p>
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-8 mt-1" />
+                    ) : (
+                      <p className="text-2xl font-bold">{purchases.length}</p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -213,7 +233,11 @@ const MyPurchases = () => {
                   <Leaf className="h-8 w-8 text-green-600 mr-3" />
                   <div>
                     <p className="text-sm text-gray-600">CO2 Evitado</p>
-                    <p className="text-2xl font-bold text-green-600">{getTotalCO2Saved()}kg</p>
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-16 mt-1" />
+                    ) : (
+                      <p className="text-2xl font-bold text-green-600">{getTotalCO2Saved()}kg</p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -223,14 +247,44 @@ const MyPurchases = () => {
               <CardContent className="p-6">
                 <div>
                   <p className="text-sm text-gray-600">Total Investido</p>
-                  <p className="text-2xl font-bold text-green-600">{formatPrice(getTotalSpent())}</p>
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-24 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold text-green-600">{formatPrice(getTotalSpent())}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Lista de compras */}
-          {purchases.length === 0 ? (
+          {isLoading ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Histórico de Compras</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Vendedor</TableHead>
+                      <TableHead>Quantidade</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>CO2 Evitado</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...Array(5)].map((_, index) => (
+                      <PurchaseRowSkeleton key={index} />
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : purchases.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
