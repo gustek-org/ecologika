@@ -11,11 +11,11 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, Menu, X, Heart, Plus } from 'lucide-react';
+import { LogOut, User, Menu, X, Heart } from 'lucide-react';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -35,6 +35,13 @@ const Header = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const languages = [
+    { code: 'pt', name: 'Português', flag: '🇧🇷' },
+    { code: 'en', name: 'English', flag: '🇺🇸' }
+  ];
+
+  const currentLanguage = languages.find(lang => lang.code === language);
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -51,22 +58,39 @@ const Header = () => {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center space-x-2 px-3">
+                  <span className="text-lg">{currentLanguage?.flag}</span>
+                  <span className="text-sm font-medium">{language.toUpperCase()}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-40" align="end">
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code as 'pt' | 'en')}
+                    className="flex items-center space-x-3 cursor-pointer"
+                  >
+                    <span className="text-lg">{lang.flag}</span>
+                    <span className="flex-1">{lang.name}</span>
+                    {language === lang.code && (
+                      <span className="text-green-600 text-lg">✓</span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <Link 
                   to="/saved-products"
-                  className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
                   title="Produtos Salvos"
                 >
                   <Heart className="h-5 w-5" />
-                </Link>
-                
-                <Link 
-                  to="/add-product"
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Vender Produto</span>
                 </Link>
                 
                 <DropdownMenu>
@@ -121,23 +145,44 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
+              {/* Language Selector Mobile */}
+              <div className="px-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{currentLanguage?.flag}</span>
+                        <span className="text-sm font-medium">{currentLanguage?.name}</span>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full" align="start">
+                    {languages.map((lang) => (
+                      <DropdownMenuItem
+                        key={lang.code}
+                        onClick={() => setLanguage(lang.code as 'pt' | 'en')}
+                        className="flex items-center space-x-3 cursor-pointer"
+                      >
+                        <span className="text-lg">{lang.flag}</span>
+                        <span className="flex-1">{lang.name}</span>
+                        {language === lang.code && (
+                          <span className="text-green-600 text-lg">✓</span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
               {isAuthenticated ? (
                 <>
                   <Link 
                     to="/saved-products"
-                    className="flex items-center text-red-500 hover:text-red-600 transition-colors px-4 py-2"
+                    className="flex items-center text-gray-400 hover:text-gray-600 transition-colors px-4 py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Heart className="h-4 w-4 mr-2" />
                     Produtos Salvos
-                  </Link>
-                  <Link 
-                    to="/add-product"
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors mx-4"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Vender Produto</span>
                   </Link>
                   <Link 
                     to="/profile"
