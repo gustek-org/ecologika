@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -98,10 +99,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 to-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-16">
+      <div className="flex-1 container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto">
           <Card className="shadow-lg">
             <CardHeader className="text-center">
@@ -200,6 +201,8 @@ const Login = () => {
           </Card>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

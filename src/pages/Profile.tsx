@@ -42,13 +42,13 @@ const Profile = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
-      <div className="flex-1 flex">
+      <div className="flex flex-1">
         <ProfileSidebar 
           activeSection={activeSection} 
           onSectionChange={setActiveSection}
         />
         
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 min-h-[calc(100vh-200px)]">
           <div className="max-w-4xl">
             {renderContent()}
           </div>

@@ -30,10 +30,10 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-16">
+      <div className="flex-1 container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
@@ -121,7 +121,7 @@ const About = () => {
         </section>
 
         {/* Team Section */}
-        <section>
+        <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Nossa Equipe</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {team.map((member, index) => (
