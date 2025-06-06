@@ -43,20 +43,19 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="https://images.unsplash.com/photo-1555419979-c8db0c608eb1?w=40&h=40&fit=crop&crop=center" 
+              src="/lovable-uploads/058c0a67-1e41-418a-9771-2aabd9c935c6.png" 
               alt="Ecologika" 
-              className="w-8 h-8 rounded-lg object-cover"
+              className="h-8 object-contain"
             />
-            <span className="text-xl font-bold text-gray-900">Ecologika</span>
           </Link>
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Language Tabs */}
             <Tabs value={language} onValueChange={(value) => setLanguage(value as 'pt' | 'en')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="pt" className="text-xs">🇧🇷 PT</TabsTrigger>
-                <TabsTrigger value="en" className="text-xs">🇺🇸 EN</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 bg-green-50">
+                <TabsTrigger value="pt" className="text-xs data-[state=active]:bg-green-100">PT</TabsTrigger>
+                <TabsTrigger value="en" className="text-xs data-[state=active]:bg-green-100">EN</TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -125,9 +124,9 @@ const Header = () => {
               {/* Language Tabs Mobile */}
               <div className="px-4">
                 <Tabs value={language} onValueChange={(value) => setLanguage(value as 'pt' | 'en')}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="pt" className="text-xs">🇧🇷 PT</TabsTrigger>
-                    <TabsTrigger value="en" className="text-xs">🇺🇸 EN</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 bg-green-50">
+                    <TabsTrigger value="pt" className="text-xs data-[state=active]:bg-green-100">PT</TabsTrigger>
+                    <TabsTrigger value="en" className="text-xs data-[state=active]:bg-green-100">EN</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
