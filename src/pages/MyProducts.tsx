@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/pages/Products';
 import { useProductImages } from '@/hooks/useProductImages';
+import { useMinimumLoadingTime } from '@/hooks/useMinimumLoadingTime';
 
 interface ProductImage {
   id?: string;
@@ -210,6 +210,9 @@ const MyProducts = () => {
   const { fetchProductImages } = useProductImages();
   const [products, setProducts] = useState<ProductWithImages[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Usar o hook para tempo mínimo de loading
+  const shouldShowLoading = useMinimumLoadingTime(isLoading, 1200);
 
   // Redirect if not authenticated
   if (!isAuthenticated || !user) {
@@ -323,7 +326,7 @@ const MyProducts = () => {
           </Button>
         </div>
 
-        {isLoading ? (
+        {shouldShowLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, index) => (
               <ProductCardSkeleton key={index} />

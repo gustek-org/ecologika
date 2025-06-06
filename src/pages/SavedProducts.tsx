@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import ProductCard from '@/components/products/ProductCard';
 import { Product } from '@/pages/Products';
 import { useProductImages } from '@/hooks/useProductImages';
+import { useMinimumLoadingTime } from '@/hooks/useMinimumLoadingTime';
 
 interface ProductImage {
   id?: string;
@@ -49,6 +49,9 @@ const SavedProducts = () => {
   const { fetchProductImages } = useProductImages();
   const [savedProducts, setSavedProducts] = useState<ProductWithImages[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Usar o hook para tempo mínimo de loading
+  const shouldShowLoading = useMinimumLoadingTime(isLoading, 1200);
 
   if (!isAuthenticated) {
     navigate('/login');
@@ -138,7 +141,7 @@ const SavedProducts = () => {
             </div>
           </div>
 
-          {isLoading ? (
+          {shouldShowLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, index) => (
                 <SavedProductCardSkeleton key={index} />
