@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -35,13 +36,6 @@ const Header = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  const languages = [
-    { code: 'pt', name: 'Português', flag: '🇧🇷' },
-    { code: 'en', name: 'English', flag: '🇺🇸' }
-  ];
-
-  const currentLanguage = languages.find(lang => lang.code === language);
-
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -58,30 +52,13 @@ const Header = () => {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Language Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center space-x-2 px-3">
-                  <span className="text-lg">{currentLanguage?.flag}</span>
-                  <span className="text-sm font-medium">{language.toUpperCase()}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40" align="end">
-                {languages.map((lang) => (
-                  <DropdownMenuItem
-                    key={lang.code}
-                    onClick={() => setLanguage(lang.code as 'pt' | 'en')}
-                    className="flex items-center space-x-3 cursor-pointer"
-                  >
-                    <span className="text-lg">{lang.flag}</span>
-                    <span className="flex-1">{lang.name}</span>
-                    {language === lang.code && (
-                      <span className="text-green-600 text-lg">✓</span>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Language Tabs */}
+            <Tabs value={language} onValueChange={(value) => setLanguage(value as 'pt' | 'en')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="pt" className="text-xs">🇧🇷 PT</TabsTrigger>
+                <TabsTrigger value="en" className="text-xs">🇺🇸 EN</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
@@ -145,33 +122,14 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
-              {/* Language Selector Mobile */}
+              {/* Language Tabs Mobile */}
               <div className="px-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">{currentLanguage?.flag}</span>
-                        <span className="text-sm font-medium">{currentLanguage?.name}</span>
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full" align="start">
-                    {languages.map((lang) => (
-                      <DropdownMenuItem
-                        key={lang.code}
-                        onClick={() => setLanguage(lang.code as 'pt' | 'en')}
-                        className="flex items-center space-x-3 cursor-pointer"
-                      >
-                        <span className="text-lg">{lang.flag}</span>
-                        <span className="flex-1">{lang.name}</span>
-                        {language === lang.code && (
-                          <span className="text-green-600 text-lg">✓</span>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Tabs value={language} onValueChange={(value) => setLanguage(value as 'pt' | 'en')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="pt" className="text-xs">🇧🇷 PT</TabsTrigger>
+                    <TabsTrigger value="en" className="text-xs">🇺🇸 EN</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
 
               {isAuthenticated ? (

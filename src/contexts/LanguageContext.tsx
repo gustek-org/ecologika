@@ -129,6 +129,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const savedLang = localStorage.getItem('ecomarket_language') as Language;
     if (savedLang && (savedLang === 'pt' || savedLang === 'en')) {
       setLanguage(savedLang);
+    } else {
+      // Set default to Portuguese if no saved preference
+      setLanguage('pt');
+      localStorage.setItem('ecomarket_language', 'pt');
     }
   }, []);
 
