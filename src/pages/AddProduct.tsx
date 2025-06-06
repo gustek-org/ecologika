@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CountrySelect } from '@/components/ui/country-select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -43,7 +45,9 @@ const AddProduct = () => {
     price: '',
     quantity: '',
     unit: 'kg',
-    location: '',
+    country: '',
+    city: '',
+    address: '',
     co2_savings: ''
   });
 
@@ -83,6 +87,10 @@ const AddProduct = () => {
       // Convert co2_savings to number if it has a numeric value, otherwise store as null
       const co2SavingsValue = formData.co2_savings ? parseFloat(formData.co2_savings.replace(/[^\d.,]/g, '').replace(',', '.')) : null;
 
+      // Combine location fields into a single location string
+      const locationParts = [formData.city, formData.country].filter(Boolean);
+      const location = locationParts.join(', ');
+
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -91,7 +99,10 @@ const AddProduct = () => {
         price: parsePrice(formData.price),
         quantity: parseInt(formData.quantity) || 1,
         unit: formData.unit,
-        location: formData.location,
+        location: location,
+        country: formData.country,
+        city: formData.city,
+        address: formData.address,
         image_url: images.length > 0 ? images[0].image_url : null, // Use first image as main image
         co2_savings: co2SavingsValue,
         seller_id: user.id,
@@ -180,7 +191,7 @@ const AddProduct = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o material" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border shadow-lg">
                       <SelectItem value="Papel">Papel</SelectItem>
                       <SelectItem value="Plástico">Plástico</SelectItem>
                       <SelectItem value="Metal">Metal</SelectItem>
@@ -233,7 +244,7 @@ const AddProduct = () => {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border shadow-lg">
                       <SelectItem value="kg">Quilogramas (kg)</SelectItem>
                       <SelectItem value="ton">Toneladas (ton)</SelectItem>
                       <SelectItem value="un">Unidades (un)</SelectItem>
@@ -255,16 +266,44 @@ const AddProduct = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="location">Localização *</Label>
-                <Input
-                  id="location"
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="Cidade, Estado"
-                  required
-                />
+              {/* Location Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800">Localização</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <CountrySelect
+                      label="País"
+                      value={formData.country}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
+                      placeholder="Selecione o país"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="city">Cidade *</Label>
+                    <Input
+                      id="city"
+                      type="text"
+                      value={formData.city}
+                      onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Nome da cidade"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="address">Endereço</Label>
+                  <Input
+                    id="address"
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Rua, número, bairro (opcional)"
+                  />
+                </div>
               </div>
 
               <div>
