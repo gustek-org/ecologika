@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      interesse: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           created_at: string
@@ -139,55 +157,88 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           approval_status: Database["public"]["Enums"]["approval_status"] | null
           approved_at: string | null
           approved_by: string | null
+          city: string | null
           company: string | null
+          company_role: string | null
+          company_website: string | null
+          country: string | null
           created_at: string | null
           documents: string[] | null
           email: string | null
+          first_name: string | null
           id: string
+          interesses_ids: string[] | null
           is_approved: boolean | null
+          last_name: string | null
           location: string | null
           name: string | null
+          nif_cnpj: string | null
+          onde_ouviu: string | null
+          phone: string | null
           rejection_reason: string | null
           saved_products: string[] | null
           updated_at: string | null
           user_type: Database["public"]["Enums"]["user_type"] | null
         }
         Insert: {
+          address?: string | null
           approval_status?:
             | Database["public"]["Enums"]["approval_status"]
             | null
           approved_at?: string | null
           approved_by?: string | null
+          city?: string | null
           company?: string | null
+          company_role?: string | null
+          company_website?: string | null
+          country?: string | null
           created_at?: string | null
           documents?: string[] | null
           email?: string | null
+          first_name?: string | null
           id: string
+          interesses_ids?: string[] | null
           is_approved?: boolean | null
+          last_name?: string | null
           location?: string | null
           name?: string | null
+          nif_cnpj?: string | null
+          onde_ouviu?: string | null
+          phone?: string | null
           rejection_reason?: string | null
           saved_products?: string[] | null
           updated_at?: string | null
           user_type?: Database["public"]["Enums"]["user_type"] | null
         }
         Update: {
+          address?: string | null
           approval_status?:
             | Database["public"]["Enums"]["approval_status"]
             | null
           approved_at?: string | null
           approved_by?: string | null
+          city?: string | null
           company?: string | null
+          company_role?: string | null
+          company_website?: string | null
+          country?: string | null
           created_at?: string | null
           documents?: string[] | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          interesses_ids?: string[] | null
           is_approved?: boolean | null
+          last_name?: string | null
           location?: string | null
           name?: string | null
+          nif_cnpj?: string | null
+          onde_ouviu?: string | null
+          phone?: string | null
           rejection_reason?: string | null
           saved_products?: string[] | null
           updated_at?: string | null
