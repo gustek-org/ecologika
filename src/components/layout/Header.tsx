@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { User, LogOut, Heart, ShoppingCart } from 'lucide-react';
 
 const Header = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, profile, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -36,9 +36,18 @@ const Header = () => {
     }
   };
 
-  const getUserInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const getUserInitials = (firstName: string | null | undefined, lastName: string | null | undefined) => {
+    if (!firstName && !lastName) return 'U';
+    const firstInitial = firstName ? firstName[0] : '';
+    const lastInitial = lastName ? lastName[0] : '';
+    return (firstInitial + lastInitial).toUpperCase() || 'U';
+  };
+
+  const getUserDisplayName = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name} ${profile.last_name}`;
+    }
+    return profile?.first_name || profile?.last_name || user?.email || '';
   };
 
   return (
@@ -66,7 +75,7 @@ const Header = () => {
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-green-100 text-green-700">
-                        {getUserInitials(user?.user_metadata?.name)}
+                        {getUserInitials(profile?.first_name, profile?.last_name)}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -74,8 +83,8 @@ const Header = () => {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      {user?.user_metadata?.name && (
-                        <p className="font-medium">{user.user_metadata.name}</p>
+                      {getUserDisplayName() && (
+                        <p className="font-medium">{getUserDisplayName()}</p>
                       )}
                       {user?.email && (
                         <p className="w-[200px] truncate text-sm text-muted-foreground">

@@ -90,6 +90,11 @@ const AddProduct = () => {
       const locationParts = [formData.city, formData.country].filter(Boolean);
       const location = locationParts.join(', ');
 
+      // Create seller name from first_name and last_name
+      const sellerName = profile?.first_name && profile?.last_name 
+        ? `${profile.first_name} ${profile.last_name}`
+        : profile?.first_name || profile?.last_name || '';
+
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -105,7 +110,7 @@ const AddProduct = () => {
         image_url: images.length > 0 ? images[0].image_url : null, // Use first image as main image
         co2_savings: co2SavingsValue,
         seller_id: user.id,
-        seller_name: profile?.name || '',
+        seller_name: sellerName,
         seller_company: profile?.company || '',
         is_active: true
       };

@@ -14,7 +14,8 @@ const ProfileSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: profile?.name || '',
+    first_name: profile?.first_name || '',
+    last_name: profile?.last_name || '',
     company: profile?.company || '',
     location: profile?.location || ''
   });
@@ -27,7 +28,8 @@ const ProfileSettings = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          name: formData.name,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           company: formData.company,
           location: formData.location,
           updated_at: new Date().toISOString()
@@ -62,7 +64,8 @@ const ProfileSettings = () => {
 
   const handleCancel = () => {
     setFormData({
-      name: profile?.name || '',
+      first_name: profile?.first_name || '',
+      last_name: profile?.last_name || '',
       company: profile?.company || '',
       location: profile?.location || ''
     });
@@ -102,11 +105,21 @@ const ProfileSettings = () => {
           </div>
 
           <div>
-            <Label htmlFor="name">Nome</Label>
+            <Label htmlFor="first_name">Nome</Label>
             <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              id="first_name"
+              value={formData.first_name}
+              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+              disabled={!isEditing}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="last_name">Sobrenome</Label>
+            <Input
+              id="last_name"
+              value={formData.last_name}
+              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
               disabled={!isEditing}
             />
           </div>
