@@ -23,6 +23,7 @@ const Register = () => {
     nifCnpj: '',
     address: '',
     country: '',
+    city: '',
     phone: '',
     email: '',
     confirmEmail: '',
@@ -91,10 +92,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await signup(formData.email, formData.password, {
-        name: `${formData.firstName} ${formData.lastName}`,
-        company: formData.companyWebsite,
-        location: `${formData.address}, ${formData.country}`,
+      console.log('Enviando dados para signup:', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         companyRole: formData.companyRole,
@@ -102,13 +100,28 @@ const Register = () => {
         nifCnpj: formData.nifCnpj,
         address: formData.address,
         country: formData.country,
-        city: '',
+        city: formData.city,
+        phone: formData.phone,
+        aboutCompany: formData.aboutCompany,
+        interessesIds: formData.selectedInterests.join(',')
+      });
+
+      const { error } = await signup(formData.email, formData.password, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        companyRole: formData.companyRole,
+        companyWebsite: formData.companyWebsite,
+        nifCnpj: formData.nifCnpj,
+        address: formData.address,
+        country: formData.country,
+        city: formData.city,
         phone: formData.phone,
         aboutCompany: formData.aboutCompany,
         interessesIds: formData.selectedInterests.join(',')
       });
 
       if (error) {
+        console.error('Erro no signup:', error);
         if (error.message.includes('User already registered')) {
           toast({
             title: t('common.error'),
@@ -130,6 +143,7 @@ const Register = () => {
         navigate('/login');
       }
     } catch (error) {
+      console.error('Erro ao criar conta:', error);
       toast({
         title: t('common.error'),
         description: 'Erro ao criar conta. Tente novamente.',
@@ -335,16 +349,28 @@ const Register = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Telefone *</Label>
+                      <Label htmlFor="city">Cidade *</Label>
                       <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        id="city"
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => handleInputChange('city', e.target.value)}
                         required
                         className="mt-1"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Telefone *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      required
+                      className="mt-1"
+                    />
                   </div>
                 </div>
 

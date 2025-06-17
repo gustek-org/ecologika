@@ -167,7 +167,6 @@ export type Database = {
           company_website: string | null
           country: string | null
           created_at: string | null
-          documents: string[] | null
           email: string | null
           first_name: string | null
           id: string
@@ -175,7 +174,6 @@ export type Database = {
           is_approved: boolean | null
           last_name: string | null
           location: string | null
-          name: string | null
           nif_cnpj: string | null
           onde_ouviu: string | null
           phone: string | null
@@ -197,7 +195,6 @@ export type Database = {
           company_website?: string | null
           country?: string | null
           created_at?: string | null
-          documents?: string[] | null
           email?: string | null
           first_name?: string | null
           id: string
@@ -205,7 +202,6 @@ export type Database = {
           is_approved?: boolean | null
           last_name?: string | null
           location?: string | null
-          name?: string | null
           nif_cnpj?: string | null
           onde_ouviu?: string | null
           phone?: string | null
@@ -227,7 +223,6 @@ export type Database = {
           company_website?: string | null
           country?: string | null
           created_at?: string | null
-          documents?: string[] | null
           email?: string | null
           first_name?: string | null
           id?: string
@@ -235,7 +230,6 @@ export type Database = {
           is_approved?: boolean | null
           last_name?: string | null
           location?: string | null
-          name?: string | null
           nif_cnpj?: string | null
           onde_ouviu?: string | null
           phone?: string | null
