@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -217,10 +218,10 @@ const PurchaseHistory = () => {
       const sellerIds = [...new Set(purchasesData.map(p => p.seller_id))];
       console.log('Seller IDs:', sellerIds);
 
-      // Get seller profiles
+      // Get seller profiles with first_name and last_name instead of name
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, name, email, company, location')
+        .select('id, first_name, last_name, email, company, location')
         .in('id', sellerIds);
 
       console.log('Profiles data:', profilesData);
@@ -235,6 +236,11 @@ const PurchaseHistory = () => {
         const sellerProfile = profilesData?.find(p => p.id === item.seller_id);
         console.log('Seller profile for ID', item.seller_id, ':', sellerProfile);
         
+        // Combine first_name and last_name to create full name
+        const sellerName = sellerProfile?.first_name && sellerProfile?.last_name 
+          ? `${sellerProfile.first_name} ${sellerProfile.last_name}`
+          : sellerProfile?.first_name || sellerProfile?.last_name || 'Não informado';
+        
         return {
           id: item.id,
           product_name: item.products.name,
@@ -242,7 +248,7 @@ const PurchaseHistory = () => {
           total_price: item.total_price,
           purchase_date: item.purchase_date,
           status: item.status,
-          seller_name: sellerProfile?.name || 'Não informado',
+          seller_name: sellerName,
           seller_email: sellerProfile?.email || 'Não informado',
           seller_company: sellerProfile?.company || 'Não informado',
           seller_location: sellerProfile?.location || 'Não informado',

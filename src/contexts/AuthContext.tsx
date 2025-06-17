@@ -6,11 +6,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
   id: string;
-  name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   email: string | null;
   company: string | null;
   location: string | null;
-  documents: string[] | null;
   is_approved: boolean | null;
   saved_products: string[] | null;
 }
