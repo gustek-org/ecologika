@@ -1,10 +1,9 @@
-
-import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductImage {
   id?: string;
@@ -20,11 +19,11 @@ interface ImageUploadProps {
   disabled?: boolean;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ 
-  images, 
-  onImagesChange, 
+const ImageUpload: React.FC<ImageUploadProps> = ({
+  images,
+  onImagesChange,
   maxImages = 5,
-  disabled = false 
+  disabled = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -32,7 +31,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
+
     if (files.length + images.length > maxImages) {
       toast({
         title: "Limite excedido",
@@ -42,8 +41,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
-    const validFiles = files.filter(file => {
-      if (!file.type.startsWith('image/')) {
+    const validFiles = files.filter((file) => {
+      if (!file.type.startsWith("image/")) {
         toast({
           title: "Formato inválido",
           description: "Apenas arquivos de imagem são permitidos.",
@@ -51,7 +50,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         });
         return false;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
         toast({
           title: "Arquivo muito grande",
           description: `${file.name} é muito grande. Limite de 5MB.`,
@@ -65,14 +65,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const newImages: ProductImage[] = validFiles.map((file, index) => ({
       image_url: URL.createObjectURL(file),
       image_order: images.length + index + 1,
-      file
+      file,
     }));
 
     onImagesChange([...images, ...newImages]);
-    
+
     // Reset file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -81,7 +81,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     // Reorder remaining images
     const reorderedImages = updatedImages.map((img, i) => ({
       ...img,
-      image_order: i + 1
+      image_order: i + 1,
     }));
     onImagesChange(reorderedImages);
   };
@@ -90,11 +90,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const updatedImages = [...images];
     const [movedImage] = updatedImages.splice(fromIndex, 1);
     updatedImages.splice(toIndex, 0, movedImage);
-    
+
     // Update order
     const reorderedImages = updatedImages.map((img, i) => ({
       ...img,
-      image_order: i + 1
+      image_order: i + 1,
     }));
     onImagesChange(reorderedImages);
   };
@@ -112,7 +112,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isUploading}
-            className="hover:bg-ecologika-primary hover:text-white transition-colors"
+            className="hover:bg-orbio-primary hover:text-white transition-colors"
           >
             <Upload className="h-4 w-4 mr-2" />
             Adicionar Imagens
@@ -130,7 +130,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       />
 
       {images.length === 0 ? (
-        <Card className="border-dashed border-2 border-gray-300 hover:border-ecologika-primary transition-colors">
+        <Card className="border-dashed border-2 border-gray-300 hover:border-orbiomary transition-colors">
           <CardContent className="p-6 text-center">
             <ImageIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-500 mb-2">Nenhuma imagem adicionada</p>
@@ -142,7 +142,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {images.map((image, index) => (
-            <Card key={index} className="relative group hover:shadow-lg transition-shadow">
+            <Card
+              key={index}
+              className="relative group hover:shadow-lg transition-shadow"
+            >
               <CardContent className="p-2">
                 <div className="aspect-square bg-gray-100 rounded-md overflow-hidden relative">
                   <img
@@ -161,7 +164,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     <X className="h-3 w-3" />
                   </Button>
                   {index === 0 && (
-                    <div className="absolute bottom-2 left-2 bg-ecologika-primary text-white text-xs px-2 py-1 rounded">
+                    <div className="absolute bottom-2 left-2 bg-orbiomary text-white text-xs px-2 py-1 rounded">
                       Principal
                     </div>
                   )}
