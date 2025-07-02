@@ -96,6 +96,6 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-ecologika-primary to-ecologika-secondary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-orbio-primary to-orbio-secondary bg-clip-text text-transparent;
   }
 }

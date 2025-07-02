@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface ProductImage {
   id: string;
@@ -15,7 +14,10 @@ interface ProductImageGalleryProps {
   productName: string;
 }
 
-const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, productName }) => {
+const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
+  images,
+  productName,
+}) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
@@ -32,14 +34,18 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
     );
   }
 
-  const sortedImages = [...images].sort((a, b) => a.image_order - b.image_order);
+  const sortedImages = [...images].sort(
+    (a, b) => a.image_order - b.image_order
+  );
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % sortedImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + sortedImages.length) % sortedImages.length);
+    setCurrentImageIndex(
+      (prev) => (prev - 1 + sortedImages.length) % sortedImages.length
+    );
   };
 
   const currentImage = sortedImages[currentImageIndex];
@@ -56,7 +62,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
               className="w-full h-full object-cover"
               onClick={() => setShowModal(true)}
             />
-            
+
             {/* Navigation arrows for multiple images */}
             {sortedImages.length > 1 && (
               <>
@@ -101,9 +107,9 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
                   <button
                     key={image.id}
                     className={`flex-shrink-0 w-16 h-16 rounded border-2 overflow-hidden transition-all ${
-                      index === currentImageIndex 
-                        ? 'border-ecologika-primary' 
-                        : 'border-gray-200 hover:border-gray-300'
+                      index === currentImageIndex
+                        ? "border-orbio-primary"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                     onClick={() => setCurrentImageIndex(index)}
                   >
@@ -132,13 +138,13 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
             >
               <X className="h-6 w-6" />
             </Button>
-            
+
             <img
               src={currentImage.image_url}
               alt={`${productName} - Imagem ${currentImageIndex + 1}`}
               className="max-w-full max-h-full object-contain"
             />
-            
+
             {/* Navigation in modal */}
             {sortedImages.length > 1 && (
               <>
@@ -158,7 +164,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images, produ
                 >
                   <ChevronRight className="h-6 w-6" />
                 </Button>
-                
+
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded">
                   {currentImageIndex + 1} / {sortedImages.length}
                 </div>

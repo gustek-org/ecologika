@@ -1,18 +1,17 @@
-
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { User, LogOut, Heart, ShoppingCart } from 'lucide-react';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { User, LogOut, Heart, ShoppingCart } from "lucide-react";
 
 const Header = () => {
   const { user, profile, isAuthenticated, logout } = useAuth();
@@ -22,7 +21,7 @@ const Header = () => {
   const handleSignOut = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate("/");
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
@@ -36,18 +35,21 @@ const Header = () => {
     }
   };
 
-  const getUserInitials = (firstName: string | null | undefined, lastName: string | null | undefined) => {
-    if (!firstName && !lastName) return 'U';
-    const firstInitial = firstName ? firstName[0] : '';
-    const lastInitial = lastName ? lastName[0] : '';
-    return (firstInitial + lastInitial).toUpperCase() || 'U';
+  const getUserInitials = (
+    firstName: string | null | undefined,
+    lastName: string | null | undefined
+  ) => {
+    if (!firstName && !lastName) return "U";
+    const firstInitial = firstName ? firstName[0] : "";
+    const lastInitial = lastName ? lastName[0] : "";
+    return (firstInitial + lastInitial).toUpperCase() || "U";
   };
 
   const getUserDisplayName = () => {
     if (profile?.first_name && profile?.last_name) {
       return `${profile.first_name} ${profile.last_name}`;
     }
-    return profile?.first_name || profile?.last_name || user?.email || '';
+    return profile?.first_name || profile?.last_name || user?.email || "";
   };
 
   return (
@@ -56,7 +58,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-green-600">Ecologika</span>
+              <span className="text-2xl font-bold text-green-600">Orbio</span>
             </Link>
           </div>
 
@@ -72,10 +74,16 @@ const Header = () => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-green-100 text-green-700">
-                        {getUserInitials(profile?.first_name, profile?.last_name)}
+                        {getUserInitials(
+                          profile?.first_name,
+                          profile?.last_name
+                        )}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -107,7 +115,10 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="cursor-pointer"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sair</span>
                   </DropdownMenuItem>
